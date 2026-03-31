@@ -71,3 +71,31 @@
 
 ### Next step recommendation
 - Replace current custom SQLite mapping with Drift layer (optional), keeping test coverage as migration safety net.
+
+## 2026-03-31 - Iteration 4 (iOS platform setup + first launch)
+
+### Scope delivered
+- Generated iOS platform directory via `flutter create --platforms=ios .`.
+- Removed auto-generated boilerplate `test/widget_test.dart` (referenced non-existent `MyApp`).
+- Verified analyzer (0 issues) and test suite (8/8 passing) after platform generation.
+- Installed Flutter SDK, Xcode, and CocoaPods on local machine.
+- Successfully launched app on iOS Simulator for the first time.
+
+### Decisions
+- iOS-first approach — Android platform deferred until needed.
+- No Xcode project edits needed; Flutter CLI handles the build.
+
+### Current status
+- App runs on iOS Simulator with all three tabs (Planner, Saved Routes, Settings).
+- Green baseline maintained (analyzer clean, all tests pass).
+
+### Bugs fixed during first manual testing
+- **Overflow on flight planning screen**: wrapped body in `SingleChildScrollView`, added `shrinkWrap` + `NeverScrollableScrollPhysics` to `WaypointList` to avoid nested scroll conflict.
+- **Route name not saved**: Save button now applies the current text field value before persisting.
+- **Saved Routes tab not refreshing**: invalidate `savedRoutesProvider` after successful save.
+- **Controller instability**: inlined `initialRouteProvider` into controller provider to prevent UUID regeneration on re-reads.
+- Removed auto-generated `initialRouteProvider` (unused after refactor).
+- Changed `saveCurrentRoute` return type to `Future<bool>` to allow UI feedback on success/failure.
+
+### Next step recommendation
+- Pick next development task: real map integration (MapLibre), Drift migration, or UI improvements.

@@ -24,6 +24,8 @@ class WaypointList extends StatelessWidget {
     }
 
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: waypoints.length,
       itemBuilder: (context, index) {
         final waypoint = waypoints[index];

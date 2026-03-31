@@ -7,7 +7,6 @@ import 'package:flight_assistant/features/flight_planning/application/use_cases/
 import 'package:flight_assistant/features/flight_planning/application/use_cases/reorder_waypoints_use_case.dart';
 import 'package:flight_assistant/features/flight_planning/data/datasources/local_route_datasource.dart';
 import 'package:flight_assistant/features/flight_planning/data/repositories/route_repository_impl.dart';
-import 'package:flight_assistant/features/flight_planning/domain/entities/route_plan.dart';
 import 'package:flight_assistant/features/flight_planning/domain/repositories/route_repository.dart';
 import 'package:flight_assistant/features/flight_planning/domain/services/route_calculation_service.dart';
 import 'package:flight_assistant/features/route_storage/data/database/app_database.dart';
@@ -61,18 +60,15 @@ final calculateRouteSummaryUseCaseProvider =
   return CalculateRouteSummaryUseCase();
 });
 
-final initialRouteProvider = Provider<RoutePlan>((ref) {
+final flightPlanningControllerProvider =
+    StateNotifierProvider<FlightPlanningController, FlightPlanningState>((ref) {
   final createRouteUseCase = ref.watch(createRouteUseCaseProvider);
-  return createRouteUseCase(
+  final initialRoute = createRouteUseCase(
     id: const Uuid().v4(),
     name: 'New Route',
   );
-});
-
-final flightPlanningControllerProvider =
-    StateNotifierProvider<FlightPlanningController, FlightPlanningState>((ref) {
   return FlightPlanningController(
-    initialRoute: ref.watch(initialRouteProvider),
+    initialRoute: initialRoute,
     addWaypointUseCase: ref.watch(addWaypointUseCaseProvider),
     removeWaypointUseCase: ref.watch(removeWaypointUseCaseProvider),
     reorderWaypointsUseCase: ref.watch(reorderWaypointsUseCaseProvider),

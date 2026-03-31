@@ -4,6 +4,7 @@ import 'package:flight_assistant/features/flight_planning/presentation/widgets/a
 import 'package:flight_assistant/features/flight_planning/presentation/widgets/route_summary_card.dart';
 import 'package:flight_assistant/features/flight_planning/presentation/widgets/waypoint_list.dart';
 import 'package:flight_assistant/features/map_view/presentation/widgets/flight_map_widget.dart';
+import 'package:flight_assistant/features/route_storage/application/providers/route_storage_providers.dart';
 import 'package:flight_assistant/shared/widgets/app_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,49 +56,57 @@ class _FlightPlanningScreenState extends ConsumerState<FlightPlanningScreen> {
     return AppScaffold(
       title: 'Flight Planning',
       currentIndex: 0,
-      body: Column(
-        children: [
-          if (state.errorMessage != null)
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: ListTile(
-                leading: Icon(
-                  Icons.error_outline,
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                ),
-                title: Text(state.errorMessage!),
-                trailing: IconButton(
-                  onPressed: controller.clearError,
-                  icon: const Icon(Icons.close),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Column(
+          children: [
+            if (state.errorMessage != null)
+              Card(
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: ListTile(
+                  leading: Icon(
+                    Icons.error_outline,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                  title: Text(state.errorMessage!),
+                  trailing: IconButton(
+                    onPressed: controller.clearError,
+                    icon: const Icon(Icons.close),
+                  ),
                 ),
               ),
-            ),
-          _RouteActionsCard(
-            routeNameController: _routeNameController,
-            isBusy: state.isBusy,
-            onRenameRoute: () => controller.updateRouteName(_routeNameController.text),
-            onNewRoute: () => controller.startNewRoute(),
-            onSaveRoute: controller.saveCurrentRoute,
-          ),
-          RouteSummaryCard(summary: summary),
-          FlightMapWidget(waypoints: state.routePlan.waypoints),
-          const SizedBox(height: 12),
-          _WaypointFormCard(
-            waypointNameController: _waypointNameController,
-            latitudeController: _latitudeController,
-            longitudeController: _longitudeController,
-            selectedType: _selectedType,
-            onTypeChanged: (value) {
-              if (value == null) {
-                return;
+            _RouteActionsCard(
+              routeNameController: _routeNameController,
+              isBusy: state.isBusy,
+              onRenameRoute: () => controller.updateRouteName(_routeNameController.text),
+              onNewRoute: () => controller.startNewRoute(),
+              onSaveRoute: () async {
+              controller.updateRouteName(_routeNameController.text);
+              final saved = await controller.saveCurrentRoute();
+              if (saved && mounted) {
+                ref.invalidate(savedRoutesProvider);
+                _showMessage('Route saved.');
               }
-              setState(() => _selectedType = value);
             },
-            onAddWaypoint: _onAddWaypoint,
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: WaypointList(
+            ),
+            RouteSummaryCard(summary: summary),
+            FlightMapWidget(waypoints: state.routePlan.waypoints),
+            const SizedBox(height: 12),
+            _WaypointFormCard(
+              waypointNameController: _waypointNameController,
+              latitudeController: _latitudeController,
+              longitudeController: _longitudeController,
+              selectedType: _selectedType,
+              onTypeChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+                setState(() => _selectedType = value);
+              },
+              onAddWaypoint: _onAddWaypoint,
+            ),
+            const SizedBox(height: 8),
+            WaypointList(
               waypoints: state.routePlan.waypoints,
               onDelete: controller.removeWaypoint,
               onMoveUp: (index) => controller.reorderWaypoint(
@@ -109,8 +118,8 @@ class _FlightPlanningScreenState extends ConsumerState<FlightPlanningScreen> {
                 newIndex: index + 1,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -168,7 +177,7 @@ class _RouteActionsCard extends StatelessWidget {
   final bool isBusy;
   final VoidCallback onRenameRoute;
   final VoidCallback onNewRoute;
-  final Future<void> Function() onSaveRoute;
+  final VoidCallback onSaveRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +212,7 @@ class _RouteActionsCard extends StatelessWidget {
                   label: const Text('New route'),
                 ),
                 FilledButton.icon(
-                  onPressed: isBusy ? null : () => onSaveRoute(),
+                  onPressed: isBusy ? null : onSaveRoute,
                   icon: isBusy
                       ? const SizedBox(
                           width: 16,

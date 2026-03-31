@@ -112,18 +112,20 @@ class FlightPlanningController extends StateNotifier<FlightPlanningState> {
     );
   }
 
-  Future<void> saveCurrentRoute() async {
+  Future<bool> saveCurrentRoute() async {
     state = state.copyWith(isBusy: true, errorMessage: null);
     try {
       await _routeRepository.saveRoute(state.routePlan);
       _loggerService.log('Route saved: ${state.routePlan.id}');
       state = state.copyWith(isBusy: false, errorMessage: null);
+      return true;
     } catch (error) {
       _loggerService.log('Unable to save route: $error');
       state = state.copyWith(
         isBusy: false,
         errorMessage: 'Unable to save route locally.',
       );
+      return false;
     }
   }
 
