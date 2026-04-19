@@ -13,19 +13,10 @@ class MapScreen extends ConsumerWidget {
     return AppScaffold(
       title: 'Map View',
       currentIndex: 0,
-      body: Column(
-        children: [
-          FlightMapWidget(waypoints: waypoints),
-          const SizedBox(height: 12),
-          Text(
-            'Dedicated map screen placeholder.\n'
-            'Integrate MapLibre/Mapbox in next iteration.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+      body: FlightMapWidget(
+        waypoints: waypoints,
+        height: 420,
       ),
     );
   }
 }
-

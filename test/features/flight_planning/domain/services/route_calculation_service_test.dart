@@ -31,6 +31,40 @@ void main() {
       expect(result.legs.length, 1);
       expect(result.totalDistanceNm, greaterThan(100));
     });
+
+    test('buildLegs creates consecutive legs for a multi-waypoint route', () {
+      final service = RouteCalculationService();
+      final waypoints = [
+        const Waypoint(
+          id: 'w1',
+          name: 'Start',
+          latitude: 52.2297,
+          longitude: 21.0122,
+          type: WaypointType.departure,
+        ),
+        const Waypoint(
+          id: 'w2',
+          name: 'Middle',
+          latitude: 51.7592,
+          longitude: 19.4560,
+          type: WaypointType.enroute,
+        ),
+        const Waypoint(
+          id: 'w3',
+          name: 'End',
+          latitude: 50.0647,
+          longitude: 19.9450,
+          type: WaypointType.destination,
+        ),
+      ];
+
+      final legs = service.buildLegs(waypoints);
+
+      expect(legs, hasLength(2));
+      expect(legs.first.fromWaypoint.name, 'Start');
+      expect(legs.first.toWaypoint.name, 'Middle');
+      expect(legs.last.fromWaypoint.name, 'Middle');
+      expect(legs.last.toWaypoint.name, 'End');
+    });
   });
 }
-

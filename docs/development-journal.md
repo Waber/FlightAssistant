@@ -99,3 +99,104 @@
 
 ### Next step recommendation
 - Pick next development task: real map integration (MapLibre), Drift migration, or UI improvements.
+
+## 2026-04-19 - Iteration 5 (3-agent planning sync + QA baseline hardening)
+
+### Scope delivered
+- Spawned a 3-agent team and synchronized responsibilities:
+  - analyst/planner: implementation plans for MapLibre, Drift migration, UI improvements,
+  - developer: readiness audit + concrete file-level backlog,
+  - tester: QA review + automated test baseline expansion.
+- Added dependencies required to unblock planned work:
+  - runtime: `maplibre`, `drift`, `drift_flutter`, `path_provider`, `sqlite3_flutter_libs`,
+  - dev: `drift_dev`, `build_runner`, `integration_test`.
+- Expanded automated test coverage with new harness and scenarios:
+  - controller tests for `FlightPlanningController`,
+  - widget tests for `FlightPlanningScreen`, `WaypointList`, `RouteSummaryCard`,
+  - app smoke test across main tabs,
+  - additional route calculation multi-leg test.
+- Added test support utilities in `test/support/` and integration test scaffold docs in `integration_test/`.
+
+### Decisions
+- QA-first sequencing for the current phase:
+  1. keep baseline green with broader unit/widget coverage,
+  2. execute MapLibre integration with smoke checks,
+  3. keep Drift migration as optional hardening step after product-facing work.
+- `integration_test` package is configured, but device-level execution still depends on local simulator/device setup.
+
+### Verification
+- `flutter pub get` -> dependencies resolved successfully.
+- `flutter analyze` -> no issues found.
+- `flutter test` -> all tests passed (20/20).
+
+### Next step recommendation
+- Start implementation spike for real map integration (MapLibre) on top of the new test baseline:
+  - replace map placeholder widget with MapLibre rendering,
+  - keep route overlay data contract stable,
+  - validate with smoke tests and iOS simulator run.
+
+## 2026-04-19 - Iteration 6 (MapLibre integration with 3-agent execution)
+
+### Scope delivered
+- Replaced map placeholder rendering with real `MapLibreMap` in `FlightMapWidget`.
+- Implemented map states:
+  - empty state when route has no waypoints,
+  - waypoint markers for `>=1` waypoint,
+  - route polyline for `>=2` waypoints.
+- Added camera behavior:
+  - center + zoom for single waypoint,
+  - `fitBounds` for multi-point route,
+  - camera refresh on map/style ready and waypoint updates.
+- Reused the same map widget implementation in:
+  - planner screen (`FlightPlanningScreen`),
+  - dedicated map screen (`MapScreen`),
+  to avoid duplicated map logic.
+- Added/updated automated tests for map-related behavior and stabilized widget/smoke tests with test MapLibre platform mocks.
+
+### Verification
+- `flutter analyze` -> no issues found.
+- `flutter test` -> all tests passed (28/28).
+
+### Time tracking
+- Task window (wall-clock): **17:43-17:54 CEST** (~**00:11**).
+- Team elapsed time (parallel work): **~00:11**.
+- Team effort sum (roles combined): **~00:34**.
+- Per role (approx, session-tracked):
+  - Planner agent: **~00:04**
+  - Developer agent: **~00:10**
+  - Tester agent: **~00:10**
+  - Main coordinator: **~00:10**
+
+### Notes
+- Time values are approximate and based on session timestamps from the current run.
+- Full native renderer validation on real device/simulator remains recommended after this iteration, even though CI/widget coverage is green.
+
+## 2026-04-19 - Iteration 7 (simulator validation + map backlog reprioritization)
+
+### Scope delivered
+- Confirmed app launch on iOS Simulator (`iPhone 17`) after environment/bootstrap fixes.
+- Reviewed current map implementation against requested next-stage scope.
+- Reprioritized roadmap for next iteration with map-first requirements.
+
+### Status split (requested map scope)
+- Already implemented:
+  - dedicated `MapScreen` widget exists (`lib/features/map_view/presentation/screens/map_screen.dart`),
+  - map widget supports empty state (can render without waypoints),
+  - MapLibre base integration (camera fit, route polyline, waypoint markers).
+- Not implemented yet (next-stage backlog):
+  - user-facing navigation path to standalone map screen without adding waypoint first,
+  - built-in Polish aviation data pack (VFR points, airports, airspaces/strefy from AUP/AIP sources),
+  - runtime layer toggles (airports / VFR points / airspaces),
+  - map UI controls for resizing/scaling controls/buttons.
+
+### Next step recommendation
+- Execute map-priority backlog in this order:
+  1. expose standalone map route/tab from app navigation,
+  2. define ingest format and local storage for Polish AUP/AIP datasets,
+  3. add map layer controller (toggle visibility by category),
+  4. add UI size controls and test coverage for map interactions.
+
+### Time tracking
+- Task window (wall-clock): **18:46-19:10 CEST** (~**00:24**).
+- Team/subagents used: **no** (main coordinator only).
+- Coordinator effort: **~00:24**.

@@ -3,3 +3,10 @@
 - As author is a newbie in mobile development, have in mind that you might need to propse a tool or IDE for author to handle your work
 - Give the answer in language you were asked (mainly polish or english) but in code always use english and standard documentation that corresponds to principles of clean code
 - Store notes of each step done in the project, like a journal with date of implementing or last edit of solution, keep it tidy and assume that other developer or model might be using it
+- For each next task delivered after 2026-04-19, add time tracking in `docs/development-journal.md`:
+  - total task duration,
+  - if team/subagents are used: team total duration and per-member duration (Planner, Developer, Tester, and main coordinator if applicable).
+- For each reprioritization request, add a short status split in the journal:
+  - what is already implemented,
+  - what remains for the next iteration backlog.
+- If a task is executed without subagents, include coordinator-only time as total task duration.
