@@ -44,7 +44,12 @@ class _FlightMapWidgetState extends State<FlightMapWidget> {
 
   MapController? _mapController;
   bool _styleLoaded = false;
+  // Best-effort last-commanded zoom, not the live camera zoom.
+  // Pinch-zoom gestures desync this value until the next +/- tap resnaps.
   double _currentZoom = 8.0;
+  // TODO(map-enhancements v2): wire _showCompass=true when camera bearing != 0.
+  // maplibre ^0.3.5 does not expose an onCameraMove callback on MapLibreMap;
+  // use MapCamera.maybeOf inside the map subtree once bearing tracking lands.
   bool _showCompass = false;
 
   @override
@@ -217,7 +222,8 @@ class _FlightMapWidgetState extends State<FlightMapWidget> {
     }
 
     if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+        permission == LocationPermission.deniedForever ||
+        permission == LocationPermission.unableToDetermine) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
