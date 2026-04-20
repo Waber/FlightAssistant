@@ -10,7 +10,11 @@ build/
 # IDE
 .idea/
 .vscode/
+*.iml
 
 # macOS
 .DS_Store
+
+# Superpowers (brainstorming sessions)
+.superpowers/
 
