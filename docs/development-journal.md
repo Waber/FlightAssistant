@@ -200,3 +200,67 @@
 - Task window (wall-clock): **18:46-19:10 CEST** (~**00:24**).
 - Team/subagents used: **no** (main coordinator only).
 - Coordinator effort: **~00:24**.
+
+## 2026-04-20 - Iteration 8 (map enhancements: 4th tab, aviation layers, controls)
+
+### Scope delivered
+All four items from Iteration 7's next-step recommendation are now implemented:
+
+1. **Standalone Map tab** — added as 2nd item in the NavigationBar (order: Plan / Map / Saved / Settings). Plan tab icon switched to `flight` so the `map` icon could move to the new Map tab.
+2. **Polish aviation data module** (`lib/features/aviation_data/`) with clean-architecture layering:
+   - Domain entities: `Airport`, `VfrPoint`, `Airspace` + `AirportType`/`AirspaceType` enums.
+   - Data source: `AviationDataLoader` — static GeoJSON parsers (airports/VFR points use `Point` geometry; airspaces use `Polygon`). Returns empty list on malformed JSON, logs errors via `dart:developer`.
+   - Bundled sample GeoJSON assets in `assets/aviation_data/`: 5 airports, 5 VFR points, 3 airspaces (2 CTR + 1 TMA).
+   - Riverpod providers: `airportsProvider`, `vfrPointsProvider`, `airspacesProvider` (FutureProviders), `layerVisibilityProvider` (StateProvider<LayerVisibility>).
+3. **Layer toggles** — "Layers" IconButton in MapScreen AppBar opens a modal bottom sheet with 3 `SwitchListTile` toggles (Airports / VFR Reporting Points / Airspaces). Bottom sheet is a standalone `ConsumerWidget` (does NOT capture parent `WidgetRef`).
+4. **Map UI controls** — floating overlay on the Map tab with 4 buttons: zoom in/out, fit route, my location. Compass button plumbing in place but `_showCompass` always false (documented limitation: maplibre ^0.3.5 lacks `onCameraMove` callback). Added `geolocator: ^13.0.0` dependency + `NSLocationWhenInUseUsageDescription` in `ios/Runner/Info.plist`.
+
+### Visual components added
+- `AirportMarkerLayer` — blue circles with flight icon, follows `WaypointMarkerLayer` pattern.
+- `VfrPointMarkerLayer` — orange rounded rectangles with NATO phonetic code labels.
+- `AirspacePolygonLayer` — amber dashed outlines (`PolylineLayer` with closed `LineString` rings).
+- `MapControlsOverlay` — vertical stack of semi-transparent black buttons bottom-right, conditional compass top-left.
+
+### Decisions
+- **Approach 1 (in-memory)** chosen over SQLite for aviation data — bundled GeoJSON → Dart objects via Riverpod, no new DB tables. Matches the current scale (~13 sample features; real Polish dataset would be ~1000) and keeps the `AppDatabase` focused on user routes.
+- **`_LayersBottomSheet` is its own `ConsumerWidget`** — never pass `WidgetRef` into a bottom sheet builder. The `ref` captured in parent `build` becomes invalid after that build completes; the modal lives past that point.
+- **`FlightMapWidget` receives aviation data + `LayerVisibility` via constructor** (not via provider `watch` inside the widget) — `MapScreen` is the single point that reads providers and passes values down, keeping `FlightMapWidget` testable in isolation.
+- **Added `bodyPadding` and `actions` params to `AppScaffold`** — backward compatible (both optional with sensible defaults). Map tab uses `EdgeInsets.zero` for full-bleed rendering + injects the Layers action.
+
+### Verification
+- `flutter test` → **57/57 passed** (previously 28 baseline + 29 new tests across parser, provider, widget, and screen tests).
+- `flutter analyze` → **No issues found!**
+- `flutter build ios --simulator --no-codesign` → **blocked by environment** (not a code issue): `flutter clean` during troubleshooting wiped the SwiftPM cache (`~/Library/Caches/org.swift.swiftpm/artifacts/`). MapLibre's xcframework ZIP needs to be re-downloaded via Xcode resolution before the next simulator run. `pod install` was re-run successfully (with `LANG=en_US.UTF-8` workaround for CocoaPods 1.16.2 encoding bug). User should open `ios/Runner.xcworkspace` in Xcode and let SPM re-resolve the MapLibre package.
+
+### Review findings addressed inline
+- **AviationDataLoader**: reviewer flagged missing error logging (spec said "Log error, return empty list"). Added `dart:developer` log calls in all 3 catch blocks.
+- **FlightMapWidget**: reviewer flagged `_showCompass` never set to true (dead branch until maplibre version upgrade) and missing handling for `LocationPermission.unableToDetermine`. Added TODO comment explaining the limitation and extended the permission denial branch.
+- **map_screen_smoke_test.dart**: unused `layer_visibility_provider` import from plan was removed.
+
+### Deferred follow-ups (flagged during reviews, not blocking this iteration)
+- `AviationDataLoader` drops the entire list when one feature is malformed. Consider per-feature error isolation so one bad record doesn't nuke the whole layer (important when real Polish AIS data lands).
+- `AviationDataLoader.parseAirspaces` only handles `Polygon` geometry. Real AIS data often uses `MultiPolygon` — will silently drop those features today.
+- `MapScreen` uses `valueOrNull ?? []` on aviation FutureProviders — loading and error states are invisible to the user. No SnackBar / spinner / skeleton. Consider `.when(...)` pattern with a lightweight progress indicator in a follow-up.
+- `_currentZoom` in `FlightMapWidget` is best-effort (last-commanded) — pinch-zoom desyncs it until the next +/- tap. Worth consuming live camera state via `MapCamera.maybeOf` once the camera-change callback is available.
+- `AirportType` enum doesn't include `atz`, `danger`, `tsa/tra`, `rmz/tmz` — may need extending once real OpenAIP / OpenFlightMaps GeoJSON replaces the sample data.
+- Real production Polish aviation data (OpenAIP / OpenFlightMaps) needs to be downloaded and converted to the app's GeoJSON schema — sample data is for dev/test only.
+
+### Next step recommendation
+- Open `ios/Runner.xcworkspace` in Xcode, let SwiftPM resolve MapLibre, then run the app on iOS Simulator to manually verify:
+  - Map tab reachable in one tap from any other tab
+  - Airport/VFR/airspace markers appear on the map (5/5/3 from sample data)
+  - Layer toggles actually hide/show markers without reload
+  - Zoom, fit-route, my-location, compass controls all work
+- After manual verification, consider which deferred follow-up to tackle next (Drift migration, real production data ingest pipeline, or `.when(...)` loading/error UX) as Iteration 9.
+
+### Time tracking
+- Task window (wall-clock): **18:42-20:01 CEST** (~**01:19**).
+- Team/subagents used: **yes** — subagent-driven development with implementer + two-stage review (spec compliance + code quality) per task.
+- Execution model: **sequential** (not parallel) — each task dispatched one implementer, then one spec reviewer, then one code-quality reviewer before moving on.
+- Per-role effort (approximate, summed across all tasks):
+  - Planner / PM (design + plan written earlier this session, then informed each implementer brief): **~00:15**
+  - Developer (13 implementer subagents): **~00:55**
+  - Tester / QA (spec + code-quality reviewer subagents, some combined for trivial tasks): **~00:45**
+  - Main coordinator (me, orchestration + follow-up fixes): **~01:19** (wall-clock)
+- Team effort sum (roles combined, sequential): **~03:14**.
+- Follow-up time spent on iOS build cache troubleshooting after main implementation complete: **~00:07** (19:54-20:01).
