@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[20.6667, 51.9167], [21.3333, 51.9167], [21.3333, 52.4167], [20.6667, 52.4167], [20.6667, 51.9167]]]
+      },
+      "properties": { "id": "EPWA_CTR", "name": "Warszawa CTR", "type": "ctr", "class": "D", "ceiling": "FL095", "floor": "GND" }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[18.3333, 54.1667], [18.8333, 54.1667], [18.8333, 54.5833], [18.3333, 54.5833], [18.3333, 54.1667]]]
+      },
+      "properties": { "id": "EPGD_CTR", "name": "Gdańsk CTR", "type": "ctr", "class": "D", "ceiling": "FL095", "floor": "GND" }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[19.5000, 49.7500], [20.2500, 49.7500], [20.2500, 50.3500], [19.5000, 50.3500], [19.5000, 49.7500]]]
+      },
+      "properties": { "id": "EPKK_TMA", "name": "Kraków TMA", "type": "tma", "class": "D", "ceiling": "FL145", "floor": "1500ft AMSL" }
+    }
+  ]
+}

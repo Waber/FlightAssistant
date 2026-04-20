@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [20.9679, 52.1657] },
+      "properties": { "id": "EPWA", "name": "Warszawa Chopin", "icao": "EPWA", "type": "licensed" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [18.5910, 54.3777] },
+      "properties": { "id": "EPGD", "name": "Gdańsk Lech Wałęsa", "icao": "EPGD", "type": "licensed" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [16.8858, 51.1008] },
+      "properties": { "id": "EPWR", "name": "Wrocław Mikołaj Kopernik", "icao": "EPWR", "type": "licensed" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [19.7965, 50.0777] },
+      "properties": { "id": "EPKK", "name": "Kraków Balice", "icao": "EPKK", "type": "licensed" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [23.0103, 52.0853] },
+      "properties": { "id": "EPBL", "name": "Biała Podlaska", "icao": "EPBL", "type": "grass" }
+    }
+  ]
+}

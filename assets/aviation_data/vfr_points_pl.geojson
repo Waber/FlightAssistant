@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [20.9122, 52.3050] },
+      "properties": { "id": "LIMA", "name": "Lima", "code": "LIMA" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [21.1833, 52.1667] },
+      "properties": { "id": "PAPA", "name": "Papa", "code": "PAPA" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [20.7667, 52.1000] },
+      "properties": { "id": "GOLF", "name": "Golf", "code": "GOLF" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [21.0500, 52.3833] },
+      "properties": { "id": "ROMEO", "name": "Romeo", "code": "ROMEO" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [20.8500, 51.9833] },
+      "properties": { "id": "DELTA", "name": "Delta", "code": "DELTA" }
+    }
+  ]
+}
