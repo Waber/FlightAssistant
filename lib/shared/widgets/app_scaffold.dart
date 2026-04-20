@@ -10,6 +10,7 @@ class AppScaffold extends StatelessWidget {
     super.key,
     this.floatingActionButton,
     this.bodyPadding = const EdgeInsets.all(16),
+    this.actions,
   });
 
   final String title;
@@ -17,11 +18,15 @@ class AppScaffold extends StatelessWidget {
   final int currentIndex;
   final Widget? floatingActionButton;
   final EdgeInsets bodyPadding;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: actions,
+      ),
       body: SafeArea(
         minimum: bodyPadding,
         child: body,
