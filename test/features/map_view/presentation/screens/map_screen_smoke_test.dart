@@ -1,5 +1,4 @@
 import 'package:flight_assistant/features/aviation_data/application/providers/aviation_data_providers.dart';
-import 'package:flight_assistant/features/aviation_data/application/providers/layer_visibility_provider.dart';
 import 'package:flight_assistant/features/flight_planning/application/providers/flight_planning_providers.dart';
 import 'package:flight_assistant/features/flight_planning/domain/entities/waypoint.dart';
 import 'package:flight_assistant/features/map_view/presentation/screens/map_screen.dart';
