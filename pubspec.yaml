@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
+  geolocator: ^13.0.0
   go_router: ^14.8.1
   maplibre: ^0.3.5
   path: ^1.9.1
@@ -32,3 +33,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/aviation_data/airports_pl.geojson
+    - assets/aviation_data/vfr_points_pl.geojson
+    - assets/aviation_data/airspaces_pl.geojson
