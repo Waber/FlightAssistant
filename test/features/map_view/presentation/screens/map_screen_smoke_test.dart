@@ -1,3 +1,5 @@
+import 'package:flight_assistant/features/aviation_data/application/providers/aviation_data_providers.dart';
+import 'package:flight_assistant/features/aviation_data/application/providers/layer_visibility_provider.dart';
 import 'package:flight_assistant/features/flight_planning/application/providers/flight_planning_providers.dart';
 import 'package:flight_assistant/features/flight_planning/domain/entities/waypoint.dart';
 import 'package:flight_assistant/features/map_view/presentation/screens/map_screen.dart';
@@ -12,45 +14,61 @@ void main() {
   setUpAll(installMapPlatformMocks);
   tearDownAll(removeMapPlatformMocks);
 
-  testWidgets('renders map screen shell with empty route state', (tester) async {
+  final baseOverrides = [
+    routeRepositoryProvider.overrideWithValue(TestRouteRepository()),
+    loggerServiceProvider.overrideWithValue(CapturingLoggerService()),
+    airportsProvider.overrideWith((ref) async => []),
+    vfrPointsProvider.overrideWith((ref) async => []),
+    airspacesProvider.overrideWith((ref) async => []),
+  ];
+
+  testWidgets('renders Map View title', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          routeRepositoryProvider.overrideWithValue(TestRouteRepository()),
-          loggerServiceProvider.overrideWithValue(CapturingLoggerService()),
-        ],
+        overrides: baseOverrides,
         child: const MaterialApp(home: MapScreen()),
       ),
     );
     await tester.pumpAndSettle();
-
     expect(find.text('Map View'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
   });
 
-  testWidgets('renders map screen shell with waypoint data', (tester) async {
-    final container = ProviderContainer(
-      overrides: [
-        routeRepositoryProvider.overrideWithValue(TestRouteRepository()),
-        loggerServiceProvider.overrideWithValue(CapturingLoggerService()),
-      ],
+  testWidgets('navigation bar has 4 destinations', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: baseOverrides,
+        child: const MaterialApp(home: MapScreen()),
+      ),
     );
-    addTearDown(container.dispose);
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationBar), findsOneWidget);
+    // Plan, Map, Saved, Settings
+    expect(find.text('Plan'), findsOneWidget);
+    expect(find.text('Map'), findsOneWidget);
+    expect(find.text('Saved'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+  });
 
-    final controller = container.read(flightPlanningControllerProvider.notifier);
-    controller.addWaypoint(
+  testWidgets('renders layers icon button', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: baseOverrides,
+        child: const MaterialApp(home: MapScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.layers_outlined), findsOneWidget);
+  });
+
+  testWidgets('renders with waypoint data', (tester) async {
+    final container = ProviderContainer(overrides: baseOverrides);
+    addTearDown(container.dispose);
+    container.read(flightPlanningControllerProvider.notifier).addWaypoint(
       name: 'EPWA',
       latitude: 52.1657,
       longitude: 20.9671,
       type: WaypointType.departure,
     );
-    controller.addWaypoint(
-      name: 'EPKK',
-      latitude: 50.0777,
-      longitude: 19.7848,
-      type: WaypointType.destination,
-    );
-
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -58,8 +76,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-
     expect(find.text('Map View'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
   });
 }

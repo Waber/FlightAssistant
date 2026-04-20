@@ -1,10 +1,12 @@
 import 'package:flight_assistant/features/flight_planning/presentation/screens/flight_planning_screen.dart';
+import 'package:flight_assistant/features/map_view/presentation/screens/map_screen.dart';
 import 'package:flight_assistant/features/route_storage/presentation/screens/saved_routes_screen.dart';
 import 'package:flight_assistant/features/settings/presentation/screens/settings_screen.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
   static const String flightPlanning = '/planner';
+  static const String map = '/map';
   static const String savedRoutes = '/saved-routes';
   static const String settings = '/settings';
 }
@@ -17,6 +19,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const FlightPlanningScreen(),
     ),
     GoRoute(
+      path: AppRoutes.map,
+      builder: (context, state) => const MapScreen(),
+    ),
+    GoRoute(
       path: AppRoutes.savedRoutes,
       builder: (context, state) => const SavedRoutesScreen(),
     ),
@@ -26,4 +32,3 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
-

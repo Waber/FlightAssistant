@@ -9,19 +9,21 @@ class AppScaffold extends StatelessWidget {
     required this.currentIndex,
     super.key,
     this.floatingActionButton,
+    this.bodyPadding = const EdgeInsets.all(16),
   });
 
   final String title;
   final Widget body;
   final int currentIndex;
   final Widget? floatingActionButton;
+  final EdgeInsets bodyPadding;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: SafeArea(
-        minimum: const EdgeInsets.all(16),
+        minimum: bodyPadding,
         child: body,
       ),
       floatingActionButton: floatingActionButton,
@@ -30,9 +32,14 @@ class AppScaffold extends StatelessWidget {
         onDestinationSelected: (index) => _onItemTap(context, index),
         destinations: const <NavigationDestination>[
           NavigationDestination(
+            icon: Icon(Icons.flight_outlined),
+            selectedIcon: Icon(Icons.flight),
+            label: 'Plan',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map),
-            label: 'Plan',
+            label: 'Map',
           ),
           NavigationDestination(
             icon: Icon(Icons.save_outlined),
@@ -53,14 +60,12 @@ class AppScaffold extends StatelessWidget {
     switch (index) {
       case 0:
         context.go(AppRoutes.flightPlanning);
-        break;
       case 1:
-        context.go(AppRoutes.savedRoutes);
-        break;
+        context.go(AppRoutes.map);
       case 2:
+        context.go(AppRoutes.savedRoutes);
+      case 3:
         context.go(AppRoutes.settings);
-        break;
     }
   }
 }
-

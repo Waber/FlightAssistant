@@ -8,7 +8,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppScaffold(
       title: 'Settings',
-      currentIndex: 2,
+      currentIndex: 3,
       body: _SettingsContent(),
     );
   }

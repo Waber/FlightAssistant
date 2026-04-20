@@ -15,7 +15,7 @@ class SavedRoutesScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'Saved Routes',
-      currentIndex: 1,
+      currentIndex: 2,
       body: savedRoutesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (_, __) => ErrorView(

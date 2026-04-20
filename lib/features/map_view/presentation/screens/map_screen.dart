@@ -9,10 +9,11 @@ class MapScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final waypoints = ref.watch(flightPlanningControllerProvider).routePlan.waypoints;
+    final waypoints =
+        ref.watch(flightPlanningControllerProvider).routePlan.waypoints;
     return AppScaffold(
       title: 'Map View',
-      currentIndex: 0,
+      currentIndex: 1,
       body: FlightMapWidget(
         waypoints: waypoints,
         height: 420,
