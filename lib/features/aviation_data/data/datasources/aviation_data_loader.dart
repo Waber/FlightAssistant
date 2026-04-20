@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:flight_assistant/features/aviation_data/domain/entities/airport.dart';
 import 'package:flight_assistant/features/aviation_data/domain/entities/airspace.dart';
@@ -45,7 +46,13 @@ class AviationDataLoader {
           type: _parseAirportType(props['type'] as String),
         );
       }).toList();
-    } catch (_) {
+    } catch (e, st) {
+      developer.log(
+        'parseAirports failed',
+        name: 'AviationDataLoader',
+        error: e,
+        stackTrace: st,
+      );
       return [];
     }
   }
@@ -65,7 +72,13 @@ class AviationDataLoader {
           longitude: (coords[0] as num).toDouble(),
         );
       }).toList();
-    } catch (_) {
+    } catch (e, st) {
+      developer.log(
+        'parseVfrPoints failed',
+        name: 'AviationDataLoader',
+        error: e,
+        stackTrace: st,
+      );
       return [];
     }
   }
@@ -93,7 +106,13 @@ class AviationDataLoader {
           polygon: polygon,
         );
       }).toList();
-    } catch (_) {
+    } catch (e, st) {
+      developer.log(
+        'parseAirspaces failed',
+        name: 'AviationDataLoader',
+        error: e,
+        stackTrace: st,
+      );
       return [];
     }
   }
