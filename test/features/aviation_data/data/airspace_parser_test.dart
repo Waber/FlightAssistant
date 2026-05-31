@@ -82,5 +82,22 @@ void main() {
         AirspaceType.other, // unknown maps to other, record kept
       ]);
     });
+
+    test('explodes MultiPolygon into one Airspace per polygon', () {
+      const json = '''
+{"type":"FeatureCollection","features":[
+ {"type":"Feature","geometry":{"type":"MultiPolygon","coordinates":[
+   [[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]],
+   [[[22.0,53.0],[22.1,53.0],[22.1,53.1],[22.0,53.0]]]
+ ]},
+  "properties":{"id":"R1","name":"Restricted 1","type":"restricted","class":"G","ceiling":"FL095","floor":"GND"}}
+]}''';
+      final result = AviationDataLoader.parseAirspaces(json);
+      expect(result.length, 2);
+      expect(result.every((a) => a.id == 'R1'), isTrue);
+      expect(result.every((a) => a.type == AirspaceType.restricted), isTrue);
+      expect(result[0].polygon.first.$1, closeTo(51.0, 0.0001));
+      expect(result[1].polygon.first.$1, closeTo(53.0, 0.0001));
+    });
   });
 }

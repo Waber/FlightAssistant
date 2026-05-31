@@ -60,20 +60,45 @@ class AviationDataLoader {
   }
 
   static List<Airspace> parseAirspaces(String jsonString) {
-    return _parseFeatures(jsonString, 'parseAirspaces', (f) {
-      final props = f['properties'] as Map<String, dynamic>;
-      final rawRing =
-          (f['geometry']['coordinates'] as List<dynamic>)[0] as List<dynamic>;
-      return Airspace(
-        id: props['id'] as String,
-        name: props['name'] as String,
-        type: _parseAirspaceType(props['type'] as String),
-        airspaceClass: props['class'] as String,
-        ceiling: props['ceiling'] as String,
-        floor: props['floor'] as String,
-        polygon: _ring(rawRing),
-      );
-    });
+    final groups = _parseFeatures(jsonString, 'parseAirspaces', _buildAirspaces);
+    return groups.expand((g) => g).toList();
+  }
+
+  /// Builds one Airspace per polygon. `Polygon` -> 1 record; `MultiPolygon` -> N.
+  static List<Airspace> _buildAirspaces(Map<String, dynamic> f) {
+    final props = f['properties'] as Map<String, dynamic>;
+    final geometry = f['geometry'] as Map<String, dynamic>;
+    final geomType = geometry['type'] as String;
+    final coords = geometry['coordinates'] as List<dynamic>;
+
+    final List<List<dynamic>> rings; // each = outer ring of one polygon
+    if (geomType == 'MultiPolygon') {
+      rings = coords
+          .map((polygon) => (polygon as List<dynamic>)[0] as List<dynamic>)
+          .toList();
+    } else {
+      // Polygon: coordinates[0] is the outer ring.
+      rings = [coords[0] as List<dynamic>];
+    }
+
+    final type = _parseAirspaceType(props['type'] as String);
+    final id = props['id'] as String;
+    final name = props['name'] as String;
+    final airspaceClass = props['class'] as String;
+    final ceiling = props['ceiling'] as String;
+    final floor = props['floor'] as String;
+
+    return rings
+        .map((ring) => Airspace(
+              id: id,
+              name: name,
+              type: type,
+              airspaceClass: airspaceClass,
+              ceiling: ceiling,
+              floor: floor,
+              polygon: _ring(ring),
+            ))
+        .toList();
   }
 
   /// Decodes a FeatureCollection and maps each feature with [build], isolating
