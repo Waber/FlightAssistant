@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flight_assistant/features/aviation_data/data/repositories/bundled_aviation_data_source.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';

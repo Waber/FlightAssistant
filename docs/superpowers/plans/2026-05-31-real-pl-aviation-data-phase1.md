@@ -1351,7 +1351,7 @@ git commit -m "feat(tool): OpenAIP fetch pipeline + README"
 ```bash
 python -m pip install -r tool/aviation_data/requirements.txt
 export OPENAIP_API_KEY=your_key_here
-python tool/aviation_data/fetch.py
+python -m tool.aviation_data.fetch    # run as a module from the repo root
 ```
 Expected: prints non-zero counts; overwrites the four asset files.
 
