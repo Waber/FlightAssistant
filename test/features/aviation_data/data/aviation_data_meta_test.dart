@@ -12,11 +12,16 @@ void main() {
       expect(meta!.source, 'OpenAIP');
       expect(meta.dataAsOf, '2026-05-29');
       expect(meta.airportCount, 123);
+      expect(meta.vfrPointCount, 200);
       expect(meta.airspaceCount, 80);
     });
 
     test('returns null for malformed JSON', () {
       expect(AviationDataLoader.parseMeta('not json'), isNull);
+    });
+
+    test('returns null for structurally valid but incomplete JSON', () {
+      expect(AviationDataLoader.parseMeta('{"source":"X"}'), isNull);
     });
   });
 }
