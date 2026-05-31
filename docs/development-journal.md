@@ -323,3 +323,12 @@ project had SwiftPM disabled, so the plugin was forced through CocoaPods. Eviden
 ### Next step recommendation
 - Manually run the app on iOS Simulator and verify the Iteration 8 map features (Map tab,
   airport/VFR/airspace markers, layer toggles, map controls), now that the build is unblocked.
+
+## Backlog / future steps (captured, not yet scheduled)
+
+- **User-provided OpenAIP API key (data refresh from the app).** Let the user paste their own
+  free OpenAIP API key into the app (Settings), so they can refresh the aviation dataset on demand
+  when online. Belongs to **Phase 2** of the aviation-data work (runtime refresh + cache): the
+  user's key is what `RemoteAviationDataSource` authenticates with — the key comes from the user,
+  not bundled in the app. Phase 1 ships read-only bundled OpenAIP data (offline); this is the
+  follow-up that makes the data updatable per-user. Requested by the user on 2026-05-31.
