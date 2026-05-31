@@ -324,6 +324,62 @@ project had SwiftPM disabled, so the plugin was forced through CocoaPods. Eviden
 - Manually run the app on iOS Simulator and verify the Iteration 8 map features (Map tab,
   airport/VFR/airspace markers, layer toggles, map controls), now that the build is unblocked.
 
+## 2026-05-31 - Iteration 10 (real PL aviation data from OpenAIP — Phase 1)
+
+Implemented on branch `feature/real-pl-aviation-data` (not yet merged — user will manually test
+next iteration before merge). Brainstormed design + plan first:
+- Spec: `docs/superpowers/specs/2026-05-31-real-pl-aviation-data-design.md`
+- Plan: `docs/superpowers/plans/2026-05-31-real-pl-aviation-data-phase1.md`
+
+### Scope delivered (Tasks 1–9 of 10; Task 10 = real-data generation, deferred to user — needs their OpenAIP API key)
+1. `AirspaceType` extended with VFR-relevant types: `atz`, `danger`, `tsa`, `tra`, `rmz`, `tmz`.
+2. Per-feature error isolation in all 3 parsers via a generic `_parseFeatures<T>` helper — one bad
+   feature is skipped+logged, the rest of the layer survives (closes Iteration 8 follow-up).
+3. `MultiPolygon` airspaces exploded into N `Airspace` records (one per polygon), `polygon` field
+   unchanged (closes Iteration 8 follow-up).
+4. `AviationDataMeta` entity + `parseMeta`/`loadMeta` + `aviation_data_meta.json` asset (provenance).
+5. Repository seam: abstract `AviationDataRepository` + `BundledAviationDataSource` (injectable
+   `AssetBundle` for testing) — Phase 2 plugs remote/cache sources behind the same interface.
+6. Providers read through `aviationDataRepositoryProvider`; added `aviationDataMetaProvider`.
+7. `MapScreen`: loading spinner + one-shot error SnackBar (via `ref.listen`) + "Data: OpenAIP, as
+   of <date>" provenance label. Map renders regardless of layer load state.
+8. Python pipeline `tool/aviation_data/mapping.py` (pure OpenAIP→app-GeoJSON) + `pytest` tests.
+9. Python `tool/aviation_data/fetch.py` (paginated OpenAIP PL fetch + orchestration) + `README.md`.
+   Run as `python -m tool.aviation_data.fetch` with `OPENAIP_API_KEY` set.
+
+### Verification
+- `flutter analyze` → No issues found (the CocoaPods/xcconfig advisory is a benign SwiftPM-migration note).
+- `flutter test` → **69/69 passed** (57 baseline + 12 new).
+- `python -m pytest tool/aviation_data/tests/` → **6/6 passed**.
+- Final holistic review: **Ready to merge**; cross-language schema (Python output ↔ Dart parser keys) verified matching.
+
+### Deferred follow-ups (flagged in reviews, non-blocking)
+- Dead `AviationDataLoader.load*` methods now unused (BundledAviationDataSource uses `parse*` +
+  injected bundle) — sweep during Phase 2 loader restructure.
+- `fetch.py` writes files incrementally; a mid-run failure could leave mismatched assets — consider
+  atomic temp-write+rename before Task 10 at scale.
+- FL-altitude branch in `_limit_to_str` is unit-assumption-dependent and untested — confirm against
+  live OpenAIP data during Task 10.
+- Map widget tests don't override `aviationDataMetaProvider`, so the provenance label render path is
+  untested.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context) as coordinator; subagents (Claude Sonnet) as implementers/reviewers.
+
+### Time tracking
+- Execution model: **subagent-driven development** — fresh implementer subagent per task + two-stage
+  review (spec compliance, then code quality) per task, with fix loops; final holistic review.
+- Task window (wall-clock): ~**2h** coordinator-orchestrated (excludes user-deferred Task 10).
+- Subagents dispatched: 9 implementers + ~18 reviewers + 5 fix-loop re-dispatches + 1 final review
+  (≈ 33 subagent runs).
+- Per-role effort (approx, summed): Developer/implementers ~**01:05**; Tester/QA reviewers ~**01:15**;
+  Planner/PM (design+plan, earlier this session) ~**00:40**; Main coordinator ~**02:00** (wall-clock).
+
+### Next step recommendation
+- User runs **Task 10** (`python -m tool.aviation_data.fetch` with their OpenAIP key) to generate +
+  commit the real PL dataset, then manually verifies the Map tab on the iOS Simulator and merges
+  `feature/real-pl-aviation-data`.
+
 ## Backlog / future steps (captured, not yet scheduled)
 
 - **User-provided OpenAIP API key (data refresh from the app).** Let the user paste their own
