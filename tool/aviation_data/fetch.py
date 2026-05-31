@@ -1,7 +1,7 @@
 """Fetch OpenAIP data for Poland and write the app's bundled GeoJSON assets.
 
 Usage:
-    OPENAIP_API_KEY=xxxx python tool/aviation_data/fetch.py
+    OPENAIP_API_KEY=xxxx python -m tool.aviation_data.fetch
 
 Writes (relative to repo root):
     assets/aviation_data/airports_pl.geojson
@@ -48,7 +48,7 @@ def _fetch_all(resource: str, key: str) -> list:
         )
         resp.raise_for_status()
         body = resp.json()
-        batch = body.get("items", body if isinstance(body, list) else [])
+        batch = body.get("items", []) if isinstance(body, dict) else (body if isinstance(body, list) else [])
         items.extend(batch)
         total_pages = body.get("totalPages", 1) if isinstance(body, dict) else 1
         if page >= total_pages or not batch:

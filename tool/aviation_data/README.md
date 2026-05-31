@@ -13,7 +13,7 @@ never calls OpenAIP in Phase 1 — it only reads the committed assets.
 ```bash
 python -m pip install -r tool/aviation_data/requirements.txt
 export OPENAIP_API_KEY=your_key_here       # never commit this
-python tool/aviation_data/fetch.py
+python -m tool.aviation_data.fetch
 ```
 
 This overwrites:
