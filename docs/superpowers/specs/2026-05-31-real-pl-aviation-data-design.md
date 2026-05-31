@@ -75,9 +75,9 @@ repository; providers and UI are unchanged.
 ### 3.2 Entities / enums (Dart)
 - `AirspaceType` — extend with `atz`, `danger`, `tsa`, `tra`, `rmz`, `tmz`
   (keep existing `ctr`, `tma`, `mctr`, `restricted`, `prohibited`, `other`).
-- `AirportType` — map from OpenAIP types; add real categories actually present in PL data
-  (e.g. `glider`, `ultralight`, `water`) alongside existing `licensed`, `grass`, `heliport`;
-  keep `other` as the catch-all fallback.
+- `AirportType` — **unchanged** for Phase 1 (`licensed`, `grass`, `heliport`, `other`). Map OpenAIP
+  airport types onto these existing values; anything not matching maps to `other`. (No new airport
+  categories at this stage — decided 2026-05-31.)
 - `Airspace.polygon` — **unchanged** (`List<(double lat, double lon)>`). MultiPolygon is handled by
   *exploding* into multiple `Airspace` records in the loader (see §3.3), so `AirspacePolygonLayer`
   needs no change.
