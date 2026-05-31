@@ -31,90 +31,86 @@ class AviationDataLoader {
   }
 
   static List<Airport> parseAirports(String jsonString) {
-    try {
-      final map = json.decode(jsonString) as Map<String, dynamic>;
-      final features = map['features'] as List<dynamic>;
-      return features.map((f) {
-        final props = f['properties'] as Map<String, dynamic>;
-        final coords = f['geometry']['coordinates'] as List<dynamic>;
-        return Airport(
-          id: props['id'] as String,
-          name: props['name'] as String,
-          icaoCode: props['icao'] as String,
-          latitude: (coords[1] as num).toDouble(),
-          longitude: (coords[0] as num).toDouble(),
-          type: _parseAirportType(props['type'] as String),
-        );
-      }).toList();
-    } catch (e, st) {
-      developer.log(
-        'parseAirports failed',
-        name: 'AviationDataLoader',
-        error: e,
-        stackTrace: st,
+    return _parseFeatures(jsonString, 'parseAirports', (f) {
+      final props = f['properties'] as Map<String, dynamic>;
+      final coords = f['geometry']['coordinates'] as List<dynamic>;
+      return Airport(
+        id: props['id'] as String,
+        name: props['name'] as String,
+        icaoCode: props['icao'] as String,
+        latitude: (coords[1] as num).toDouble(),
+        longitude: (coords[0] as num).toDouble(),
+        type: _parseAirportType(props['type'] as String),
       );
-      return [];
-    }
+    });
   }
 
   static List<VfrPoint> parseVfrPoints(String jsonString) {
-    try {
-      final map = json.decode(jsonString) as Map<String, dynamic>;
-      final features = map['features'] as List<dynamic>;
-      return features.map((f) {
-        final props = f['properties'] as Map<String, dynamic>;
-        final coords = f['geometry']['coordinates'] as List<dynamic>;
-        return VfrPoint(
-          id: props['id'] as String,
-          name: props['name'] as String,
-          code: props['code'] as String,
-          latitude: (coords[1] as num).toDouble(),
-          longitude: (coords[0] as num).toDouble(),
-        );
-      }).toList();
-    } catch (e, st) {
-      developer.log(
-        'parseVfrPoints failed',
-        name: 'AviationDataLoader',
-        error: e,
-        stackTrace: st,
+    return _parseFeatures(jsonString, 'parseVfrPoints', (f) {
+      final props = f['properties'] as Map<String, dynamic>;
+      final coords = f['geometry']['coordinates'] as List<dynamic>;
+      return VfrPoint(
+        id: props['id'] as String,
+        name: props['name'] as String,
+        code: props['code'] as String,
+        latitude: (coords[1] as num).toDouble(),
+        longitude: (coords[0] as num).toDouble(),
       );
-      return [];
-    }
+    });
   }
 
   static List<Airspace> parseAirspaces(String jsonString) {
+    return _parseFeatures(jsonString, 'parseAirspaces', (f) {
+      final props = f['properties'] as Map<String, dynamic>;
+      final rawRing =
+          (f['geometry']['coordinates'] as List<dynamic>)[0] as List<dynamic>;
+      return Airspace(
+        id: props['id'] as String,
+        name: props['name'] as String,
+        type: _parseAirspaceType(props['type'] as String),
+        airspaceClass: props['class'] as String,
+        ceiling: props['ceiling'] as String,
+        floor: props['floor'] as String,
+        polygon: _ring(rawRing),
+      );
+    });
+  }
+
+  /// Decodes a FeatureCollection and maps each feature with [build], isolating
+  /// per-feature failures: a bad feature is skipped + logged, the rest are kept.
+  /// Malformed top-level JSON returns an empty list.
+  static List<T> _parseFeatures<T>(
+    String jsonString,
+    String op,
+    T Function(Map<String, dynamic> feature) build,
+  ) {
+    final List<dynamic> features;
     try {
       final map = json.decode(jsonString) as Map<String, dynamic>;
-      final features = map['features'] as List<dynamic>;
-      return features.map((f) {
-        final props = f['properties'] as Map<String, dynamic>;
-        final rawRing =
-            (f['geometry']['coordinates'] as List<dynamic>)[0] as List<dynamic>;
-        final polygon = rawRing.map((c) {
-          final coord = c as List<dynamic>;
-          // GeoJSON uses [lon, lat]; convert to (lat, lon) record
-          return ((coord[1] as num).toDouble(), (coord[0] as num).toDouble());
-        }).toList();
-        return Airspace(
-          id: props['id'] as String,
-          name: props['name'] as String,
-          type: _parseAirspaceType(props['type'] as String),
-          airspaceClass: props['class'] as String,
-          ceiling: props['ceiling'] as String,
-          floor: props['floor'] as String,
-          polygon: polygon,
-        );
-      }).toList();
+      features = map['features'] as List<dynamic>;
     } catch (e, st) {
-      developer.log(
-        'parseAirspaces failed',
-        name: 'AviationDataLoader',
-        error: e,
-        stackTrace: st,
-      );
+      developer.log('$op failed (top-level)',
+          name: 'AviationDataLoader', error: e, stackTrace: st);
       return [];
     }
+    final result = <T>[];
+    for (final f in features) {
+      try {
+        result.add(build(f as Map<String, dynamic>));
+      } catch (e, st) {
+        developer.log('$op skipped a feature',
+            name: 'AviationDataLoader', error: e, stackTrace: st);
+      }
+    }
+    return result;
+  }
+
+  static List<(double, double)> _ring(List<dynamic> rawRing) {
+    return rawRing.map((c) {
+      final coord = c as List<dynamic>;
+      // GeoJSON uses [lon, lat]; convert to (lat, lon) record.
+      return ((coord[1] as num).toDouble(), (coord[0] as num).toDouble());
+    }).toList();
   }
 
   static AirportType _parseAirportType(String value) => switch (value) {
