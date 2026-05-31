@@ -264,3 +264,62 @@ All four items from Iteration 7's next-step recommendation are now implemented:
   - Main coordinator (me, orchestration + follow-up fixes): **~01:19** (wall-clock)
 - Team effort sum (roles combined, sequential): **~03:14**.
 - Follow-up time spent on iOS build cache troubleshooting after main implementation complete: **~00:07** (19:54-20:01).
+
+## 2026-05-31 - Iteration 9 (fix: iOS build "Use of undeclared identifier 'MapLibrePlugin'")
+
+### Symptom
+- `flutter build ios --simulator` failed with:
+  `Semantic Issue (Xcode): Use of undeclared identifier 'MapLibrePlugin'` at
+  `ios/Runner/GeneratedPluginRegistrant.m:50`.
+
+### Root cause (systematic debugging, no subagents)
+The `maplibre` package **requires Swift Package Manager (SwiftPM) on iOS**, but the
+project had SwiftPM disabled, so the plugin was forced through CocoaPods. Evidence gathered:
+- The `maplibre_ios` pod compiled fine — `maplibre_ios.framework` was produced and its
+  generated `maplibre_ios-Swift.h` **did** declare `@interface MapLibrePlugin : NSObject <FlutterPlugin>`.
+- The only build error was the `undeclared identifier` at the registration call — no
+  "module not found" / "could not build module" preceding it.
+- `maplibre_ios` is the **only** plugin whose registrant entry needs an extra
+  `#import <maplibre_ios/maplibre_ios-Swift.h>` (its Swift class lives in a separate `.Swift`
+  submodule that `@import maplibre_ios;` alone does not pull into the Objective-C registrant).
+- `flutter config` showed `enable-swift-package-manager: (Not set)` and `project.pbxproj`
+  had **0** SwiftPM references — i.e. the Swift-only plugin class was invisible to the ObjC
+  `GeneratedPluginRegistrant.m`.
+- Confirmed against the package docs: *"The package requires Swift Package Manager to be enabled."*
+  This also matches the Iteration 8 notes that referenced a "SwiftPM cache" / MapLibre
+  xcframework resolution — SwiftPM was the intended setup; the flag had been lost.
+
+### Fix
+- Enabled SwiftPM **in `pubspec.yaml`** (repo-committed, not a machine-global flag) so the
+  setting travels with the project:
+  ```yaml
+  flutter:
+    config:
+      enable-swift-package-manager: true
+  ```
+- Ran `flutter pub get` + `flutter build ios --simulator --no-codesign`. Flutter migrated the
+  Xcode project to SwiftPM (added the generated Swift package, 16 SwiftPM refs in
+  `project.pbxproj`, new `ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/`).
+
+### Verification
+- `flutter build ios --simulator --no-codesign` → **✓ Built build/ios/iphonesimulator/Runner.app** (exit 0).
+- Change is iOS-build-config only; Dart unit/widget tests (57/57) are unaffected.
+
+### Files changed
+- `pubspec.yaml` (SwiftPM config)
+- `ios/Runner.xcodeproj/project.pbxproj`, `Runner.xcscheme` (SwiftPM migration, Flutter-generated)
+- `ios/Podfile.lock` (maplibre_ios moved off CocoaPods)
+- new: `ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
+
+### Time tracking
+- Task window (wall-clock): ~**00:25** (investigation + first failing build + clean pod/xcodebuild
+  evidence run + SwiftPM rebuild incl. MapLibre xcframework download).
+- Team/subagents used: **no** (main coordinator only).
+- Coordinator effort (total): ~**00:25**.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context).
+
+### Next step recommendation
+- Manually run the app on iOS Simulator and verify the Iteration 8 map features (Map tab,
+  airport/VFR/airspace markers, layer toggles, map controls), now that the build is unblocked.
