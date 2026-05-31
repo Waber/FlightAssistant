@@ -14,9 +14,28 @@ class MapScreen extends ConsumerWidget {
     final waypoints =
         ref.watch(flightPlanningControllerProvider).routePlan.waypoints;
     final layerVisibility = ref.watch(layerVisibilityProvider);
-    final airports = ref.watch(airportsProvider).valueOrNull ?? [];
-    final vfrPoints = ref.watch(vfrPointsProvider).valueOrNull ?? [];
-    final airspaces = ref.watch(airspacesProvider).valueOrNull ?? [];
+
+    final airportsAsync = ref.watch(airportsProvider);
+    final vfrPointsAsync = ref.watch(vfrPointsProvider);
+    final airspacesAsync = ref.watch(airspacesProvider);
+    final meta = ref.watch(aviationDataMetaProvider).valueOrNull;
+
+    final isLoading = airportsAsync.isLoading ||
+        vfrPointsAsync.isLoading ||
+        airspacesAsync.isLoading;
+    final hasError = airportsAsync.hasError ||
+        vfrPointsAsync.hasError ||
+        airspacesAsync.hasError;
+
+    // Surface a one-off error without blocking the map.
+    if (hasError) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load aviation data')),
+        );
+      });
+    }
 
     return AppScaffold(
       title: 'Map View',
@@ -30,14 +49,47 @@ class MapScreen extends ConsumerWidget {
         ),
       ],
       body: LayoutBuilder(
-        builder: (context, constraints) => FlightMapWidget(
-          waypoints: waypoints,
-          airports: airports,
-          vfrPoints: vfrPoints,
-          airspaces: airspaces,
-          layerVisibility: layerVisibility,
-          showControls: true,
-          height: constraints.maxHeight,
+        builder: (context, constraints) => Stack(
+          children: [
+            FlightMapWidget(
+              waypoints: waypoints,
+              airports: airportsAsync.valueOrNull ?? const [],
+              vfrPoints: vfrPointsAsync.valueOrNull ?? const [],
+              airspaces: airspacesAsync.valueOrNull ?? const [],
+              layerVisibility: layerVisibility,
+              showControls: true,
+              height: constraints.maxHeight,
+            ),
+            if (isLoading)
+              const Positioned(
+                top: 12,
+                left: 12,
+                child: SizedBox(
+                  key: Key('aviation-loading'),
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            if (meta != null)
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Text(
+                      'Data: ${meta.source}, as of ${meta.dataAsOf}',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
