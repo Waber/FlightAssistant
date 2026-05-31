@@ -61,12 +61,24 @@ void main() {
  {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
   "properties":{"id":"A1","name":"ATZ 1","type":"atz","class":"G","ceiling":"2000ft","floor":"GND"}},
  {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"S1","name":"TSA 1","type":"tsa","class":"G","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"T1","name":"TRA 1","type":"tra","class":"G","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"R1","name":"RMZ 1","type":"rmz","class":"G","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"M1","name":"TMZ 1","type":"tmz","class":"G","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
   "properties":{"id":"X1","name":"Unknown","type":"weird","class":"G","ceiling":"FL095","floor":"GND"}}
 ]}''';
       final result = AviationDataLoader.parseAirspaces(json);
       expect(result.map((a) => a.type), [
         AirspaceType.danger,
         AirspaceType.atz,
+        AirspaceType.tsa,
+        AirspaceType.tra,
+        AirspaceType.rmz,
+        AirspaceType.tmz,
         AirspaceType.other, // unknown maps to other, record kept
       ]);
     });
