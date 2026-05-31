@@ -43,3 +43,4 @@ flutter:
     - assets/aviation_data/airports_pl.geojson
     - assets/aviation_data/vfr_points_pl.geojson
     - assets/aviation_data/airspaces_pl.geojson
+    - assets/aviation_data/aviation_data_meta.json

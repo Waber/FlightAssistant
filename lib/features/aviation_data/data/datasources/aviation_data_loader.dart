@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flight_assistant/features/aviation_data/domain/entities/airport.dart';
 import 'package:flight_assistant/features/aviation_data/domain/entities/airspace.dart';
+import 'package:flight_assistant/features/aviation_data/domain/entities/aviation_data_meta.dart';
 import 'package:flight_assistant/features/aviation_data/domain/entities/vfr_point.dart';
 import 'package:flutter/services.dart';
 
@@ -28,6 +29,33 @@ class AviationDataLoader {
       'assets/aviation_data/airspaces_pl.geojson',
     );
     return parseAirspaces(raw);
+  }
+
+  static Future<AviationDataMeta?> loadMeta() async {
+    final raw = await rootBundle.loadString(
+      'assets/aviation_data/aviation_data_meta.json',
+    );
+    return parseMeta(raw);
+  }
+
+  static AviationDataMeta? parseMeta(String jsonString) {
+    try {
+      final map = json.decode(jsonString) as Map<String, dynamic>;
+      final counts = map['counts'] as Map<String, dynamic>;
+      return AviationDataMeta(
+        source: map['source'] as String,
+        license: map['license'] as String,
+        generatedAt: map['generatedAt'] as String,
+        dataAsOf: map['dataAsOf'] as String,
+        airportCount: (counts['airports'] as num).toInt(),
+        vfrPointCount: (counts['vfrPoints'] as num).toInt(),
+        airspaceCount: (counts['airspaces'] as num).toInt(),
+      );
+    } catch (e, st) {
+      developer.log('parseMeta failed',
+          name: 'AviationDataLoader', error: e, stackTrace: st);
+      return null;
+    }
   }
 
   static List<Airport> parseAirports(String jsonString) {
