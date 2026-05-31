@@ -23,19 +23,10 @@ class MapScreen extends ConsumerWidget {
     final isLoading = airportsAsync.isLoading ||
         vfrPointsAsync.isLoading ||
         airspacesAsync.isLoading;
-    final hasError = airportsAsync.hasError ||
-        vfrPointsAsync.hasError ||
-        airspacesAsync.hasError;
 
-    // Surface a one-off error without blocking the map.
-    if (hasError) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load aviation data')),
-        );
-      });
-    }
+    // Surface an error once, only on the transition into an error state, so a
+    // plain rebuild (e.g. toggling a layer) does not re-show the SnackBar.
+    _listenForErrors(context, ref);
 
     return AppScaffold(
       title: 'Map View',
@@ -93,6 +84,21 @@ class MapScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Shows the error SnackBar once, on the transition into an error state.
+  void _listenForErrors(BuildContext context, WidgetRef ref) {
+    void onError<T>(AsyncValue<T>? prev, AsyncValue<T> next) {
+      if (next.hasError && (prev == null || !prev.hasError)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load aviation data')),
+        );
+      }
+    }
+
+    ref.listen(airportsProvider, onError);
+    ref.listen(vfrPointsProvider, onError);
+    ref.listen(airspacesProvider, onError);
   }
 
   void _showLayersSheet(BuildContext context) {

@@ -51,8 +51,8 @@ void main() {
         child: const MaterialApp(home: MapScreen()),
       ),
     );
-    await tester.pump(); // let the error microtask run
-    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(); // flush the error microtask -> provider transitions
+    await tester.pump(); // let the listener fire + the SnackBar frame build
     expect(find.textContaining('aviation data'), findsOneWidget);
   });
 }
