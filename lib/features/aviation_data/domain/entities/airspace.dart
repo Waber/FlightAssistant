@@ -1,4 +1,17 @@
-enum AirspaceType { ctr, tma, mctr, restricted, prohibited, other }
+enum AirspaceType {
+  ctr,
+  tma,
+  mctr,
+  atz,
+  danger,
+  restricted,
+  prohibited,
+  tsa,
+  tra,
+  rmz,
+  tmz,
+  other,
+}
 
 class Airspace {
   const Airspace({

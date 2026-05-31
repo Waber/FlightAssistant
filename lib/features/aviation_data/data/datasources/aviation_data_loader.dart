@@ -128,8 +128,14 @@ class AviationDataLoader {
         'ctr' => AirspaceType.ctr,
         'tma' => AirspaceType.tma,
         'mctr' => AirspaceType.mctr,
+        'atz' => AirspaceType.atz,
+        'danger' => AirspaceType.danger,
         'restricted' => AirspaceType.restricted,
         'prohibited' => AirspaceType.prohibited,
+        'tsa' => AirspaceType.tsa,
+        'tra' => AirspaceType.tra,
+        'rmz' => AirspaceType.rmz,
+        'tmz' => AirspaceType.tmz,
         _ => AirspaceType.other,
       };
 }

@@ -52,5 +52,23 @@ void main() {
     test('returns empty list for malformed JSON', () {
       expect(AviationDataLoader.parseAirspaces('not json'), isEmpty);
     });
+
+    test('maps extended airspace types', () {
+      const json = '''
+{"type":"FeatureCollection","features":[
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"D1","name":"Danger 1","type":"danger","class":"G","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"A1","name":"ATZ 1","type":"atz","class":"G","ceiling":"2000ft","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"X1","name":"Unknown","type":"weird","class":"G","ceiling":"FL095","floor":"GND"}}
+]}''';
+      final result = AviationDataLoader.parseAirspaces(json);
+      expect(result.map((a) => a.type), [
+        AirspaceType.danger,
+        AirspaceType.atz,
+        AirspaceType.other, // unknown maps to other, record kept
+      ]);
+    });
   });
 }
