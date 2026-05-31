@@ -23,7 +23,7 @@ def test_map_airport_without_icao_falls_back_to_id_and_other_type():
     f = map_airport(SAMPLE["airports"][1])
     assert f["properties"]["icao"] == ""
     assert f["properties"]["id"]  # non-empty id even without ICAO
-    assert f["properties"]["type"] in {"grass", "other"}
+    assert f["properties"]["type"] == "grass"  # fixture type=1 -> "grass"
 
 
 def test_map_reporting_point():

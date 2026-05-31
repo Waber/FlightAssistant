@@ -18,3 +18,7 @@ build/
 # Superpowers (brainstorming sessions)
 .superpowers/
 
+# Python
+__pycache__/
+*.pyc
+

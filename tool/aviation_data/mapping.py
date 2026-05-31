@@ -25,6 +25,11 @@ _AIRSPACE_TYPE = {
     13: "tmz",
 }
 
+# OpenAIP icaoClass codes 0..6 -> ICAO airspace class A..G.
+# Codes outside this range (e.g. 8 = unclassified/SUA) are intentionally
+# absent so they map to "" (unknown) rather than being misreported as "G".
+_ICAO_CLASS = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
+
 
 def map_airport(item: dict) -> dict:
     icao = (item.get("icaoCode") or "").strip()
@@ -33,7 +38,7 @@ def map_airport(item: dict) -> dict:
         "type": "Feature",
         "geometry": item["geometry"],
         "properties": {
-            "id": icao or f"AP_{name}".strip().replace(" ", "_"),
+            "id": icao or f"AP_{name.strip()}".replace(" ", "_"),
             "name": name,
             "icao": icao,
             "type": _AIRPORT_TYPE.get(item.get("type"), "other"),
@@ -61,6 +66,7 @@ def _limit_to_str(limit: dict) -> str:
     if datum == 0 and value == 0:
         return "GND"
     if datum == 2:
+        # Assumes the API value is in feet (confirmed against live data in Task 9).
         return f"FL{int(value) // 100:03d}"
     suffix = "AMSL" if datum == 1 else "AGL"
     return f"{int(value)}ft {suffix}"
@@ -80,5 +86,5 @@ def map_airspace_feature(item: dict) -> list:
 
 
 def _icao_class(code) -> str:
-    # OpenAIP icaoClass: 0=A ... 6=G, 8=unclassified/SUA.
-    return {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}.get(code, "G")
+    # Unknown/unclassified (e.g. 8 = SUA) -> "" so it isn't misreported as "G".
+    return _ICAO_CLASS.get(code, "")
