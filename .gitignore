@@ -22,3 +22,6 @@ build/
 __pycache__/
 *.pyc
 
+
+.venv/
+tool/aviation_data/.env

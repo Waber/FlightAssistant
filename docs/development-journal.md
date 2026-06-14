@@ -380,6 +380,48 @@ next iteration before merge). Brainstormed design + plan first:
   commit the real PL dataset, then manually verifies the Map tab on the iOS Simulator and merges
   `feature/real-pl-aviation-data`.
 
+## 2026-06-14 - Task 10 run + mapping bug found → Iteration 11 designed (NEXT STEP)
+
+Ran the real OpenAIP fetch (Task 10) on `feature/real-pl-aviation-data` and **found a bug**:
+the numeric `type` → category lookup tables in `tool/aviation_data/mapping.py` were guessed
+against the placeholder dataset and are wrong for live data. Live fetch produced **431 airports,
+439 VFR points, 1005 airspaces**, but **70% of airspaces and 40% of airports fell through to
+`other`** due to mis-keyed enums (e.g. code 6=RMZ → `other`, code 13=ATZ → `tmz`, airport code
+3=International Airport → `heliport`).
+
+Diagnosed by re-fetching the raw type histogram and correlating codes ↔ Polish names (which embed
+the ICAO designator), then confirmed against OpenAIP's authoritative enums (airport enum from the
+OpenAIP Google Group; airspace enum cross-checked name-by-name). The geometry, coordinates, IDs,
+names, and ceiling/floor (incl. the `FL###` branch) all parse correctly — only the `type` lookup
+is wrong.
+
+Brainstormed + agreed the fix scope: **correct the lookups AND enrich the app's categories**
+(the map currently doesn't style by type at all — one amber outline, one blue dot). Design written
+and approved; implementation **deferred** (no time this session).
+
+- **Spec:** `docs/superpowers/specs/2026-06-14-enrich-aviation-data-categories-design.md`
+- New airspace types: `militaryRoute, glidingSector, droneZone, sporting`.
+- New airport types: `military, ultralight, landingStrip`.
+- Map: colour-code airspaces by hazard convention; per-type airport icon/colour.
+
+### Committed this session (infra only — NOT the data)
+- `tool/aviation_data/fetch.py`: load key from a gitignored `tool/aviation_data/.env`
+  (env var still wins); docstring note.
+- `tool/aviation_data/README.md`: venv setup + `.env` option; `python3`/`.venv` commands.
+- `.gitignore`: `.venv/`, `tool/aviation_data/.env`.
+- The regenerated GeoJSON assets were **deliberately NOT committed** — they carry the
+  known-wrong type mappings; they'll be regenerated correctly by re-fetching after the fix.
+
+### NEXT STEP (Iteration 11)
+1. Implement the spec above (mapping.py + Dart enums/parser + map styling + tests) — start by
+   invoking the `writing-plans` skill to turn the spec into an implementation plan.
+2. Re-run `.venv/bin/python -m tool.aviation_data.fetch` to regenerate assets with correct categories.
+3. `flutter analyze` + `flutter test` + `pytest`, verify Map tab on iOS Simulator, commit the
+   regenerated assets, then merge `feature/real-pl-aviation-data`.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context).
+
 ## Backlog / future steps (captured, not yet scheduled)
 
 - **User-provided OpenAIP API key (data refresh from the app).** Let the user paste their own

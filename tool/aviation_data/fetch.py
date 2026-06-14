@@ -3,6 +3,9 @@
 Usage:
     OPENAIP_API_KEY=xxxx python -m tool.aviation_data.fetch
 
+The key can also live in a gitignored `tool/aviation_data/.env` file as
+`OPENAIP_API_KEY=...` (an existing environment variable takes precedence).
+
 Writes (relative to repo root):
     assets/aviation_data/airports_pl.geojson
     assets/aviation_data/vfr_points_pl.geojson
@@ -26,9 +29,28 @@ API = "https://api.core.openaip.net/api"
 COUNTRY = "PL"
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT_DIR = os.path.join(REPO_ROOT, "assets", "aviation_data")
+ENV_FILE = os.path.join(os.path.dirname(__file__), ".env")
+
+
+def _load_dotenv() -> None:
+    """Load KEY=VALUE lines from the local .env into os.environ.
+
+    Does not override variables already set in the environment.
+    """
+    if not os.path.isfile(ENV_FILE):
+        return
+    with open(ENV_FILE) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, _, value = line.partition("=")
+            name, value = name.strip(), value.strip().strip("'\"")
+            os.environ.setdefault(name, value)
 
 
 def _key() -> str:
+    _load_dotenv()
     key = os.environ.get("OPENAIP_API_KEY")
     if not key:
         sys.exit("ERROR: set OPENAIP_API_KEY (free account at openaip.net).")

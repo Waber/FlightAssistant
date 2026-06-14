@@ -5,15 +5,26 @@ GeoJSON assets. Run manually when you want to refresh the data. The app itself
 never calls OpenAIP in Phase 1 — it only reads the committed assets.
 
 ## Prerequisites
-- Python 3.10+
+- Python 3.10+ (on macOS the interpreter is `python3`, not `python`)
 - A free OpenAIP API key: create an account at https://www.openaip.net, then
   generate an API key in your account settings.
 
+## Setup (once)
+Homebrew Python is "externally managed", so install deps into a venv:
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r tool/aviation_data/requirements.txt
+```
+
+## Provide the API key
+Pick one (an existing `OPENAIP_API_KEY` env var takes precedence over the file):
+- **Gitignored file (recommended):** put `OPENAIP_API_KEY=your_key_here` in
+  `tool/aviation_data/.env`. It is gitignored and loaded automatically by `fetch.py`.
+- **Environment variable:** `export OPENAIP_API_KEY=your_key_here` (never commit this).
+
 ## Run
 ```bash
-python -m pip install -r tool/aviation_data/requirements.txt
-export OPENAIP_API_KEY=your_key_here       # never commit this
-python -m tool.aviation_data.fetch
+.venv/bin/python -m tool.aviation_data.fetch
 ```
 
 This overwrites:
@@ -26,7 +37,7 @@ Review the diff, run the app, then commit the regenerated assets.
 
 ## Tests
 ```bash
-python -m pytest tool/aviation_data/tests/ -v
+.venv/bin/python -m pytest tool/aviation_data/tests/ -v
 ```
 
 ## Data attribution
