@@ -26,6 +26,27 @@ def test_map_airport_without_icao_falls_back_to_id_and_other_type():
     assert f["properties"]["type"] == "grass"  # fixture type=1 -> "grass"
 
 
+def test_airport_type_codes_map_correctly():
+    base = dict(SAMPLE["airports"][0])  # has geometry + name
+    cases = {
+        0: "licensed", 1: "grass", 2: "licensed", 3: "licensed",
+        4: "heliport", 5: "military", 6: "ultralight", 7: "heliport",
+        9: "licensed", 11: "landing_strip", 12: "landing_strip",
+    }
+    for code, expected in cases.items():
+        item = dict(base)
+        item["type"] = code
+        assert map_airport(item)["properties"]["type"] == expected, f"code {code}"
+
+
+def test_airport_closed_water_altiport_map_to_other():
+    base = dict(SAMPLE["airports"][0])
+    for code in (8, 10, 13):  # Closed, Water, Altiport
+        item = dict(base)
+        item["type"] = code
+        assert map_airport(item)["properties"]["type"] == "other"
+
+
 def test_map_reporting_point():
     f = map_reporting_point(SAMPLE["reporting_points"][0])
     assert f["properties"]["code"] == "LIMA"

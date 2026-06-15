@@ -1,14 +1,19 @@
 """Pure OpenAIP -> app-GeoJSON mapping. No network here (easy to unit-test)."""
 
-# OpenAIP numeric airport "type" -> our AirportType strings.
-# Unmapped -> "other". (Exact codes confirmed against live data in fetch.py.)
+# OpenAIP numeric airport "type" -> our AirportType strings. Unmapped -> "other".
+# Codes per the OpenAIP airport type enum.
 _AIRPORT_TYPE = {
-    0: "other",        # heliport civil/other -> handled below
-    9: "licensed",     # international/regional civil
-    10: "licensed",
-    2: "licensed",     # civil
-    1: "grass",        # airfield/glider grass strip
-    3: "heliport",
+    0: "licensed",          # Airport (civil/military)
+    1: "grass",             # Glider Site
+    2: "licensed",          # Airfield Civil
+    3: "licensed",          # International Airport
+    4: "heliport",          # Heliport Military
+    5: "military",          # Military Aerodrome
+    6: "ultralight",        # Ultra Light Flying Site
+    7: "heliport",          # Heliport Civil
+    9: "licensed",          # Airfield IFR
+    11: "landing_strip",    # Landing Strip
+    12: "landing_strip",    # Agricultural Landing Strip
 }
 
 # OpenAIP numeric airspace "type" -> our AirspaceType strings. Unmapped -> "other".
