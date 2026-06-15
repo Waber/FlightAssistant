@@ -51,5 +51,23 @@ void main() {
     test('returns empty list for malformed JSON', () {
       expect(AviationDataLoader.parseAirports('not json'), isEmpty);
     });
+
+    test('maps new airport categories', () {
+      const json = '''
+{"type":"FeatureCollection","features":[
+ {"type":"Feature","geometry":{"type":"Point","coordinates":[20.0,51.0]},
+  "properties":{"id":"M1","name":"Mil","icao":"","type":"military"}},
+ {"type":"Feature","geometry":{"type":"Point","coordinates":[20.0,51.0]},
+  "properties":{"id":"U1","name":"Ul","icao":"","type":"ultralight"}},
+ {"type":"Feature","geometry":{"type":"Point","coordinates":[20.0,51.0]},
+  "properties":{"id":"L1","name":"Strip","icao":"","type":"landing_strip"}}
+]}''';
+      final result = AviationDataLoader.parseAirports(json);
+      expect(result.map((a) => a.type), [
+        AirportType.military,
+        AirportType.ultralight,
+        AirportType.landingStrip,
+      ]);
+    });
   });
 }

@@ -170,6 +170,9 @@ class AviationDataLoader {
         'licensed' => AirportType.licensed,
         'grass' => AirportType.grass,
         'heliport' => AirportType.heliport,
+        'military' => AirportType.military,
+        'ultralight' => AirportType.ultralight,
+        'landing_strip' => AirportType.landingStrip,
         _ => AirportType.other,
       };
 

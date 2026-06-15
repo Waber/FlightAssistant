@@ -1,4 +1,4 @@
-enum AirportType { licensed, grass, heliport, other }
+enum AirportType { licensed, grass, heliport, military, ultralight, landingStrip, other }
 
 class Airport {
   const Airport({
