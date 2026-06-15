@@ -12,17 +12,22 @@ _AIRPORT_TYPE = {
 }
 
 # OpenAIP numeric airspace "type" -> our AirspaceType strings. Unmapped -> "other".
+# Codes per the OpenAIP airspace type enum, cross-checked against live PL names.
 _AIRSPACE_TYPE = {
-    4: "ctr",
-    7: "tma",
     1: "restricted",
     2: "danger",
     3: "prohibited",
-    21: "atz",
-    10: "tsa",
-    11: "tra",
-    12: "rmz",
-    13: "tmz",
+    4: "ctr",
+    5: "tmz",
+    6: "rmz",
+    7: "tma",
+    8: "tra",
+    9: "tsa",
+    13: "atz",
+    18: "drone_zone",       # Warning Area / BVLOS drone operations
+    21: "gliding_sector",
+    28: "sporting",         # aerial sporting / recreational activity
+    30: "military_route",
 }
 
 # OpenAIP icaoClass codes 0..6 -> ICAO airspace class A..G.

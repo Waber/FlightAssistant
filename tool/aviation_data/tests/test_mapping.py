@@ -52,3 +52,25 @@ def test_unknown_airspace_type_maps_to_other():
     item["type"] = 999
     feats = map_airspace_feature(item)
     assert feats[0]["properties"]["type"] == "other"
+
+
+def test_airspace_type_codes_map_correctly():
+    base = dict(SAMPLE["airspaces"][0])  # a valid Polygon airspace
+    cases = {
+        1: "restricted", 2: "danger", 3: "prohibited", 4: "ctr",
+        5: "tmz", 6: "rmz", 7: "tma", 8: "tra", 9: "tsa", 13: "atz",
+        18: "drone_zone", 21: "gliding_sector", 28: "sporting", 30: "military_route",
+    }
+    for code, expected in cases.items():
+        item = dict(base)
+        item["type"] = code
+        feats = map_airspace_feature(item)
+        assert feats[0]["properties"]["type"] == expected, f"code {code}"
+
+
+def test_airspace_fir_and_fis_map_to_other():
+    base = dict(SAMPLE["airspaces"][0])
+    for code in (10, 33):  # FIR, FIS Sector
+        item = dict(base)
+        item["type"] = code
+        assert map_airspace_feature(item)[0]["properties"]["type"] == "other"
