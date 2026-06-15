@@ -18,3 +18,10 @@ build/
 # Superpowers (brainstorming sessions)
 .superpowers/
 
+# Python
+__pycache__/
+*.pyc
+
+
+.venv/
+tool/aviation_data/.env

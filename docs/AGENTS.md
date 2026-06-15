@@ -18,3 +18,4 @@
   - Engineer: Gets tickets/instructions from Analytics and implements it, he is a experienced mobile developer, with knowledge about full SDLC and database technologies, he also fixes bugs reported by QA
   - QA: does the manual testing and automation testing from unit till E2E, reports to coordinator and Analytic/PM, cooperates with Developer
   - Occasionally if needed you may spawn also a infrastructure engineer which handles devops topics, database and similar ones.
+  - Use top models for agents like Opus, do not worry about token usage

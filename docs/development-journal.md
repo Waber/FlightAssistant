@@ -264,3 +264,212 @@ All four items from Iteration 7's next-step recommendation are now implemented:
   - Main coordinator (me, orchestration + follow-up fixes): **~01:19** (wall-clock)
 - Team effort sum (roles combined, sequential): **~03:14**.
 - Follow-up time spent on iOS build cache troubleshooting after main implementation complete: **~00:07** (19:54-20:01).
+
+## 2026-05-31 - Iteration 9 (fix: iOS build "Use of undeclared identifier 'MapLibrePlugin'")
+
+### Symptom
+- `flutter build ios --simulator` failed with:
+  `Semantic Issue (Xcode): Use of undeclared identifier 'MapLibrePlugin'` at
+  `ios/Runner/GeneratedPluginRegistrant.m:50`.
+
+### Root cause (systematic debugging, no subagents)
+The `maplibre` package **requires Swift Package Manager (SwiftPM) on iOS**, but the
+project had SwiftPM disabled, so the plugin was forced through CocoaPods. Evidence gathered:
+- The `maplibre_ios` pod compiled fine — `maplibre_ios.framework` was produced and its
+  generated `maplibre_ios-Swift.h` **did** declare `@interface MapLibrePlugin : NSObject <FlutterPlugin>`.
+- The only build error was the `undeclared identifier` at the registration call — no
+  "module not found" / "could not build module" preceding it.
+- `maplibre_ios` is the **only** plugin whose registrant entry needs an extra
+  `#import <maplibre_ios/maplibre_ios-Swift.h>` (its Swift class lives in a separate `.Swift`
+  submodule that `@import maplibre_ios;` alone does not pull into the Objective-C registrant).
+- `flutter config` showed `enable-swift-package-manager: (Not set)` and `project.pbxproj`
+  had **0** SwiftPM references — i.e. the Swift-only plugin class was invisible to the ObjC
+  `GeneratedPluginRegistrant.m`.
+- Confirmed against the package docs: *"The package requires Swift Package Manager to be enabled."*
+  This also matches the Iteration 8 notes that referenced a "SwiftPM cache" / MapLibre
+  xcframework resolution — SwiftPM was the intended setup; the flag had been lost.
+
+### Fix
+- Enabled SwiftPM **in `pubspec.yaml`** (repo-committed, not a machine-global flag) so the
+  setting travels with the project:
+  ```yaml
+  flutter:
+    config:
+      enable-swift-package-manager: true
+  ```
+- Ran `flutter pub get` + `flutter build ios --simulator --no-codesign`. Flutter migrated the
+  Xcode project to SwiftPM (added the generated Swift package, 16 SwiftPM refs in
+  `project.pbxproj`, new `ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/`).
+
+### Verification
+- `flutter build ios --simulator --no-codesign` → **✓ Built build/ios/iphonesimulator/Runner.app** (exit 0).
+- Change is iOS-build-config only; Dart unit/widget tests (57/57) are unaffected.
+
+### Files changed
+- `pubspec.yaml` (SwiftPM config)
+- `ios/Runner.xcodeproj/project.pbxproj`, `Runner.xcscheme` (SwiftPM migration, Flutter-generated)
+- `ios/Podfile.lock` (maplibre_ios moved off CocoaPods)
+- new: `ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
+
+### Time tracking
+- Task window (wall-clock): ~**00:25** (investigation + first failing build + clean pod/xcodebuild
+  evidence run + SwiftPM rebuild incl. MapLibre xcframework download).
+- Team/subagents used: **no** (main coordinator only).
+- Coordinator effort (total): ~**00:25**.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context).
+
+### Next step recommendation
+- Manually run the app on iOS Simulator and verify the Iteration 8 map features (Map tab,
+  airport/VFR/airspace markers, layer toggles, map controls), now that the build is unblocked.
+
+## 2026-05-31 - Iteration 10 (real PL aviation data from OpenAIP — Phase 1)
+
+Implemented on branch `feature/real-pl-aviation-data` (not yet merged — user will manually test
+next iteration before merge). Brainstormed design + plan first:
+- Spec: `docs/superpowers/specs/2026-05-31-real-pl-aviation-data-design.md`
+- Plan: `docs/superpowers/plans/2026-05-31-real-pl-aviation-data-phase1.md`
+
+### Scope delivered (Tasks 1–9 of 10; Task 10 = real-data generation, deferred to user — needs their OpenAIP API key)
+1. `AirspaceType` extended with VFR-relevant types: `atz`, `danger`, `tsa`, `tra`, `rmz`, `tmz`.
+2. Per-feature error isolation in all 3 parsers via a generic `_parseFeatures<T>` helper — one bad
+   feature is skipped+logged, the rest of the layer survives (closes Iteration 8 follow-up).
+3. `MultiPolygon` airspaces exploded into N `Airspace` records (one per polygon), `polygon` field
+   unchanged (closes Iteration 8 follow-up).
+4. `AviationDataMeta` entity + `parseMeta`/`loadMeta` + `aviation_data_meta.json` asset (provenance).
+5. Repository seam: abstract `AviationDataRepository` + `BundledAviationDataSource` (injectable
+   `AssetBundle` for testing) — Phase 2 plugs remote/cache sources behind the same interface.
+6. Providers read through `aviationDataRepositoryProvider`; added `aviationDataMetaProvider`.
+7. `MapScreen`: loading spinner + one-shot error SnackBar (via `ref.listen`) + "Data: OpenAIP, as
+   of <date>" provenance label. Map renders regardless of layer load state.
+8. Python pipeline `tool/aviation_data/mapping.py` (pure OpenAIP→app-GeoJSON) + `pytest` tests.
+9. Python `tool/aviation_data/fetch.py` (paginated OpenAIP PL fetch + orchestration) + `README.md`.
+   Run as `python -m tool.aviation_data.fetch` with `OPENAIP_API_KEY` set.
+
+### Verification
+- `flutter analyze` → No issues found (the CocoaPods/xcconfig advisory is a benign SwiftPM-migration note).
+- `flutter test` → **69/69 passed** (57 baseline + 12 new).
+- `python -m pytest tool/aviation_data/tests/` → **6/6 passed**.
+- Final holistic review: **Ready to merge**; cross-language schema (Python output ↔ Dart parser keys) verified matching.
+
+### Deferred follow-ups (flagged in reviews, non-blocking)
+- Dead `AviationDataLoader.load*` methods now unused (BundledAviationDataSource uses `parse*` +
+  injected bundle) — sweep during Phase 2 loader restructure.
+- `fetch.py` writes files incrementally; a mid-run failure could leave mismatched assets — consider
+  atomic temp-write+rename before Task 10 at scale.
+- FL-altitude branch in `_limit_to_str` is unit-assumption-dependent and untested — confirm against
+  live OpenAIP data during Task 10.
+- Map widget tests don't override `aviationDataMetaProvider`, so the provenance label render path is
+  untested.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context) as coordinator; subagents (Claude Sonnet) as implementers/reviewers.
+
+### Time tracking
+- Execution model: **subagent-driven development** — fresh implementer subagent per task + two-stage
+  review (spec compliance, then code quality) per task, with fix loops; final holistic review.
+- Task window (wall-clock): ~**2h** coordinator-orchestrated (excludes user-deferred Task 10).
+- Subagents dispatched: 9 implementers + ~18 reviewers + 5 fix-loop re-dispatches + 1 final review
+  (≈ 33 subagent runs).
+- Per-role effort (approx, summed): Developer/implementers ~**01:05**; Tester/QA reviewers ~**01:15**;
+  Planner/PM (design+plan, earlier this session) ~**00:40**; Main coordinator ~**02:00** (wall-clock).
+
+### Next step recommendation
+- User runs **Task 10** (`python -m tool.aviation_data.fetch` with their OpenAIP key) to generate +
+  commit the real PL dataset, then manually verifies the Map tab on the iOS Simulator and merges
+  `feature/real-pl-aviation-data`.
+
+## 2026-06-15 - Iteration 11 (corrected + enriched aviation data categories)
+
+Implemented the Iteration 11 spec on `feature/real-pl-aviation-data` via the brainstorming →
+writing-plans → executing-plans flow (TDD, commit per task).
+- Spec: `docs/superpowers/specs/2026-06-14-enrich-aviation-data-categories-design.md`
+- Plan: `docs/superpowers/plans/2026-06-15-enrich-aviation-data-categories.md`
+
+### Delivered
+1. **Corrected `mapping.py` lookup tables** against the authoritative OpenAIP enums (airspace
+   codes were shifted: 6=RMZ, 8=TRA, 9=TSA, 13=ATZ, 10=FIR; airport 3=International, 7=Heliport).
+2. **New airspace categories:** `militaryRoute, glidingSector, droneZone, sporting` (Dart enum +
+   parser + Python emit). **New airport categories:** `military, ultralight, landingStrip`.
+3. **Map colour-coding:** `AirspacePolygonLayer.fromAirspaces` now returns one `PolylineLayer`
+   per colour group (red=hazard, blue=controlled, purple=RMZ/TMZ, orange=temporary, brown=mil
+   route, green=gliding/sporting, magenta=drone, amber=other). Airports get per-type
+   icon+colour via `AirportMarkerLayer.colorFor`/`iconFor` (heliport renders an "H" badge).
+
+### Verification
+- `flutter test` → **82/82** (69 baseline + 13 new parser/styling tests).
+- `flutter analyze` → No issues (benign CocoaPods/SwiftPM advisory only).
+- `.venv/bin/python -m pytest tool/aviation_data/tests/` → **10/10**.
+- Re-fetched real data: **431 airports, 439 VFR points, 1005 airspaces**. `other` rate dropped
+  from **40%→3%** (airports; remaining = closed/water/altiport) and **70%→1%** (airspaces;
+  remaining 11 = FIR + FIS, which intentionally have no category). Cross-language schema guard:
+  every emitted type string has a Dart parser case.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context).
+
+### ⚠️ BLOCKING GATE — manual simulator verification required before any next tasks
+Iteration 11 changes the map's visual rendering (colour-coded airspaces, per-type airport
+markers, heliport "H" badge) and ship real PL data — none of which is covered by automated
+tests. **Do NOT start the next tasks (merge, Phase 2, follow-ups) until the user has run the app
+on the iOS Simulator and confirmed the Map tab looks correct.** Code is pushed to
+`origin/feature/real-pl-aviation-data` (no PR opened); branch is NOT merged.
+
+### Next step recommendation
+- **User**: run the app on the iOS Simulator and visually confirm the colour-coded airspaces and
+  per-type airport markers (esp. new categories + heliport "H" badge). Only after that passes:
+  merge `feature/real-pl-aviation-data`.
+- Optional follow-up: filter FIR (covers all of Poland) out of the airspace layer if it reads as
+  noisy.
+
+## 2026-06-14 - Task 10 run + mapping bug found → Iteration 11 designed (NEXT STEP)
+
+Ran the real OpenAIP fetch (Task 10) on `feature/real-pl-aviation-data` and **found a bug**:
+the numeric `type` → category lookup tables in `tool/aviation_data/mapping.py` were guessed
+against the placeholder dataset and are wrong for live data. Live fetch produced **431 airports,
+439 VFR points, 1005 airspaces**, but **70% of airspaces and 40% of airports fell through to
+`other`** due to mis-keyed enums (e.g. code 6=RMZ → `other`, code 13=ATZ → `tmz`, airport code
+3=International Airport → `heliport`).
+
+Diagnosed by re-fetching the raw type histogram and correlating codes ↔ Polish names (which embed
+the ICAO designator), then confirmed against OpenAIP's authoritative enums (airport enum from the
+OpenAIP Google Group; airspace enum cross-checked name-by-name). The geometry, coordinates, IDs,
+names, and ceiling/floor (incl. the `FL###` branch) all parse correctly — only the `type` lookup
+is wrong.
+
+Brainstormed + agreed the fix scope: **correct the lookups AND enrich the app's categories**
+(the map currently doesn't style by type at all — one amber outline, one blue dot). Design written
+and approved; implementation **deferred** (no time this session).
+
+- **Spec:** `docs/superpowers/specs/2026-06-14-enrich-aviation-data-categories-design.md`
+- New airspace types: `militaryRoute, glidingSector, droneZone, sporting`.
+- New airport types: `military, ultralight, landingStrip`.
+- Map: colour-code airspaces by hazard convention; per-type airport icon/colour.
+
+### Committed this session (infra only — NOT the data)
+- `tool/aviation_data/fetch.py`: load key from a gitignored `tool/aviation_data/.env`
+  (env var still wins); docstring note.
+- `tool/aviation_data/README.md`: venv setup + `.env` option; `python3`/`.venv` commands.
+- `.gitignore`: `.venv/`, `tool/aviation_data/.env`.
+- The regenerated GeoJSON assets were **deliberately NOT committed** — they carry the
+  known-wrong type mappings; they'll be regenerated correctly by re-fetching after the fix.
+
+### NEXT STEP (Iteration 11)
+1. Implement the spec above (mapping.py + Dart enums/parser + map styling + tests) — start by
+   invoking the `writing-plans` skill to turn the spec into an implementation plan.
+2. Re-run `.venv/bin/python -m tool.aviation_data.fetch` to regenerate assets with correct categories.
+3. `flutter analyze` + `flutter test` + `pytest`, verify Map tab on iOS Simulator, commit the
+   regenerated assets, then merge `feature/real-pl-aviation-data`.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context).
+
+## Backlog / future steps (captured, not yet scheduled)
+
+- **User-provided OpenAIP API key (data refresh from the app).** Let the user paste their own
+  free OpenAIP API key into the app (Settings), so they can refresh the aviation dataset on demand
+  when online. Belongs to **Phase 2** of the aviation-data work (runtime refresh + cache): the
+  user's key is what `RemoteAviationDataSource` authenticates with — the key comes from the user,
+  not bundled in the app. Phase 1 ships read-only bundled OpenAIP data (offline); this is the
+  follow-up that makes the data updatable per-user. Requested by the user on 2026-05-31.

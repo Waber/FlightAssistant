@@ -1,0 +1,11 @@
+{
+  "source": "OpenAIP",
+  "license": "CC BY-NC-SA 4.0",
+  "generatedAt": "2026-06-15",
+  "dataAsOf": "2026-06-15",
+  "counts": {
+    "airports": 431,
+    "vfrPoints": 439,
+    "airspaces": 1005
+  }
+}
