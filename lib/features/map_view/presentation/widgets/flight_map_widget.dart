@@ -123,8 +123,7 @@ class _FlightMapWidgetState extends State<FlightMapWidget> {
     final routeLayer = RoutePolylineLayer.fromWaypoints(widget.waypoints);
     if (routeLayer != null) layers.add(routeLayer);
     if (widget.layerVisibility.showAirspaces) {
-      final airspaceLayer = AirspacePolygonLayer.fromAirspaces(widget.airspaces);
-      if (airspaceLayer != null) layers.add(airspaceLayer);
+      layers.addAll(AirspacePolygonLayer.fromAirspaces(widget.airspaces));
     }
     return layers;
   }
