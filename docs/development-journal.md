@@ -409,11 +409,19 @@ writing-plans → executing-plans flow (TDD, commit per task).
 ### AI model
 - Claude Code (Claude Opus 4.8, 1M context).
 
+### ⚠️ BLOCKING GATE — manual simulator verification required before any next tasks
+Iteration 11 changes the map's visual rendering (colour-coded airspaces, per-type airport
+markers, heliport "H" badge) and ship real PL data — none of which is covered by automated
+tests. **Do NOT start the next tasks (merge, Phase 2, follow-ups) until the user has run the app
+on the iOS Simulator and confirmed the Map tab looks correct.** Code is pushed to
+`origin/feature/real-pl-aviation-data` (no PR opened); branch is NOT merged.
+
 ### Next step recommendation
-- User runs the app on the iOS Simulator to visually confirm the colour-coded airspaces and
-  per-type airport markers (esp. new categories + heliport "H" badge), then merges
-  `feature/real-pl-aviation-data`. Optional follow-up: filter FIR (covers all of Poland) out of
-  the airspace layer if it reads as noisy.
+- **User**: run the app on the iOS Simulator and visually confirm the colour-coded airspaces and
+  per-type airport markers (esp. new categories + heliport "H" badge). Only after that passes:
+  merge `feature/real-pl-aviation-data`.
+- Optional follow-up: filter FIR (covers all of Poland) out of the airspace layer if it reads as
+  noisy.
 
 ## 2026-06-14 - Task 10 run + mapping bug found → Iteration 11 designed (NEXT STEP)
 
