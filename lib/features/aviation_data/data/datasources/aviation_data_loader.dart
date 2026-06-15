@@ -185,6 +185,10 @@ class AviationDataLoader {
         'tra' => AirspaceType.tra,
         'rmz' => AirspaceType.rmz,
         'tmz' => AirspaceType.tmz,
+        'military_route' => AirspaceType.militaryRoute,
+        'gliding_sector' => AirspaceType.glidingSector,
+        'drone_zone' => AirspaceType.droneZone,
+        'sporting' => AirspaceType.sporting,
         _ => AirspaceType.other,
       };
 }

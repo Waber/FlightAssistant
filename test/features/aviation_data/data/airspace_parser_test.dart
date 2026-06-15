@@ -83,6 +83,27 @@ void main() {
       ]);
     });
 
+    test('maps new VFR airspace categories', () {
+      const json = '''
+{"type":"FeatureCollection","features":[
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"MR1","name":"MRT1","type":"military_route","class":"","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"GS1","name":"Glider","type":"gliding_sector","class":"","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"DZ1","name":"BVLOS","type":"drone_zone","class":"","ceiling":"FL095","floor":"GND"}},
+ {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[20.0,51.0],[20.1,51.0],[20.1,51.1],[20.0,51.0]]]},
+  "properties":{"id":"SP1","name":"Area","type":"sporting","class":"","ceiling":"FL095","floor":"GND"}}
+]}''';
+      final result = AviationDataLoader.parseAirspaces(json);
+      expect(result.map((a) => a.type), [
+        AirspaceType.militaryRoute,
+        AirspaceType.glidingSector,
+        AirspaceType.droneZone,
+        AirspaceType.sporting,
+      ]);
+    });
+
     test('explodes MultiPolygon into one Airspace per polygon', () {
       const json = '''
 {"type":"FeatureCollection","features":[

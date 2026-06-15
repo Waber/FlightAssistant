@@ -10,6 +10,10 @@ enum AirspaceType {
   tra,
   rmz,
   tmz,
+  militaryRoute,
+  glidingSector,
+  droneZone,
+  sporting,
   other,
 }
 
