@@ -380,6 +380,41 @@ next iteration before merge). Brainstormed design + plan first:
   commit the real PL dataset, then manually verifies the Map tab on the iOS Simulator and merges
   `feature/real-pl-aviation-data`.
 
+## 2026-06-15 - Iteration 11 (corrected + enriched aviation data categories)
+
+Implemented the Iteration 11 spec on `feature/real-pl-aviation-data` via the brainstorming →
+writing-plans → executing-plans flow (TDD, commit per task).
+- Spec: `docs/superpowers/specs/2026-06-14-enrich-aviation-data-categories-design.md`
+- Plan: `docs/superpowers/plans/2026-06-15-enrich-aviation-data-categories.md`
+
+### Delivered
+1. **Corrected `mapping.py` lookup tables** against the authoritative OpenAIP enums (airspace
+   codes were shifted: 6=RMZ, 8=TRA, 9=TSA, 13=ATZ, 10=FIR; airport 3=International, 7=Heliport).
+2. **New airspace categories:** `militaryRoute, glidingSector, droneZone, sporting` (Dart enum +
+   parser + Python emit). **New airport categories:** `military, ultralight, landingStrip`.
+3. **Map colour-coding:** `AirspacePolygonLayer.fromAirspaces` now returns one `PolylineLayer`
+   per colour group (red=hazard, blue=controlled, purple=RMZ/TMZ, orange=temporary, brown=mil
+   route, green=gliding/sporting, magenta=drone, amber=other). Airports get per-type
+   icon+colour via `AirportMarkerLayer.colorFor`/`iconFor` (heliport renders an "H" badge).
+
+### Verification
+- `flutter test` → **82/82** (69 baseline + 13 new parser/styling tests).
+- `flutter analyze` → No issues (benign CocoaPods/SwiftPM advisory only).
+- `.venv/bin/python -m pytest tool/aviation_data/tests/` → **10/10**.
+- Re-fetched real data: **431 airports, 439 VFR points, 1005 airspaces**. `other` rate dropped
+  from **40%→3%** (airports; remaining = closed/water/altiport) and **70%→1%** (airspaces;
+  remaining 11 = FIR + FIS, which intentionally have no category). Cross-language schema guard:
+  every emitted type string has a Dart parser case.
+
+### AI model
+- Claude Code (Claude Opus 4.8, 1M context).
+
+### Next step recommendation
+- User runs the app on the iOS Simulator to visually confirm the colour-coded airspaces and
+  per-type airport markers (esp. new categories + heliport "H" badge), then merges
+  `feature/real-pl-aviation-data`. Optional follow-up: filter FIR (covers all of Poland) out of
+  the airspace layer if it reads as noisy.
+
 ## 2026-06-14 - Task 10 run + mapping bug found → Iteration 11 designed (NEXT STEP)
 
 Ran the real OpenAIP fetch (Task 10) on `feature/real-pl-aviation-data` and **found a bug**:
